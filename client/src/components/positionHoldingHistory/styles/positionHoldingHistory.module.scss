@@ -1,0 +1,112 @@
+.container {
+  min-height: 300px;
+  width: 100vw;
+}
+
+.minH300 {
+  min-height: 300px;
+}
+
+.boxShadow {
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.rounded10 {
+  border-radius: 10px;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex1 {
+  flex: 1;
+}
+
+.flex2 {
+  flex: 2;
+}
+
+.itemsCenter {
+  align-items: center;
+}
+
+.justifyBetween {
+  justify-content: space-between;
+}
+
+.textCenter {
+  text-align: center;
+}
+
+.textMainGray {
+  color: #666;
+}
+
+.textMainBlack {
+  color: #333;
+}
+
+.textPrimary {
+  color: #1890ff;
+}
+
+.textKlineUp {
+  color: #00b069;
+}
+
+.cursorPointer {
+  cursor: pointer;
+}
+
+.px20 {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.py10 {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.pr20 {
+  padding-right: 20px;
+}
+
+.mx30 {
+  margin-left: 30px;
+  margin-right: 30px;
+}
+
+.mb10 {
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+.text14 {
+  font-size: 14px;
+}
+
+.text12 {
+  font-size: 12px;
+}
+
+.empty {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.emptyImage {
+  width: 200px;
+  margin: 0 auto;
+  
+  svg {
+    width: 100%;
+    height: auto;
+  }
+}
+
+.emptyDescription {
+  margin-top: 20px;
+  color: #909399;
+}

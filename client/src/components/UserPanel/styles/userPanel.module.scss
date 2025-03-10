@@ -1,0 +1,732 @@
+.userPanelDialogOverlay {
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 749px;
+    border-radius: 10px;
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    height: 98vh;
+}
+
+.dialogHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 20px;
+}
+
+.dialogTitle {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.closeButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+
+    svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+.dialogBody {
+    padding: 5px 20px 20px 20px;
+}
+
+.contentWrapper {
+    display: flex;
+    gap: 20px;
+}
+
+.sidebar {
+    min-width: 200px;
+}
+
+.funcOption {
+    padding: 10px 16px;
+    cursor: pointer;
+    border-radius: 20px;
+    // margin-bottom: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    &.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+}
+
+.mainContent {
+    flex: 1;
+    width: 500px;
+    // height: 450px;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 0 5px 2px rgba(7, 7, 7, 0.089);
+}
+
+.balanceCard {
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 0 24px rgba(161, 161, 161, 0.09);
+}
+
+.balanceTitle {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.balanceInfo {
+    display: flex;
+    align-items: center;
+}
+
+.balanceItem {
+    flex: 1;
+}
+
+.label {
+    font-size: 12px;
+    color: var(--main-gray);
+}
+
+.valuePositive {
+    font-size: 16px;
+    color: var(--kline-up);
+}
+
+.value {
+    font-size: 16px;
+    color: var(--main-black);
+}
+
+.recordsTitle {
+    margin: 20px 0;
+    color: var(--main-black);
+    font-size: 14px;
+    padding-left: 10px;
+}
+
+.recordsContainer {
+    height: 400px;
+    overflow: auto;
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.emptyIcon {
+    width: 200px;
+    margin-bottom: 16px;
+}
+
+.emptyText {
+    color: var(--main-gray);
+    font-size: 12px;
+}
+
+.depositCard {
+    padding: 5px;
+    border-radius: 10px;
+}
+
+.paymentSelector {
+    display: flex;
+    text-align: center;
+    color: white;
+    padding: 6px;
+    margin-bottom: 10px;
+    gap: 2px;
+}
+
+.paymentOption {
+    flex: 1;
+    padding: 10px;
+    border-radius: 20px;
+    background-color: #f3f4f6;
+    cursor: pointer;
+
+    &.active {
+        background-color: #0166fc;
+    }
+}
+
+.depositForm {
+    .formGroup {
+        margin-bottom: 20px;
+
+        label {
+            font-size: 14px;
+            display: inline-block;
+            width: 30%;
+            margin-right: 10px;
+        }
+    }
+}
+
+.uploadSection {
+    // background-color: white !important;
+    display: flex !important;
+    flex-direction: row !important;
+    // margin-bottom: 10px;
+}
+
+
+.walletAddressContainer {
+    display: flex;
+    flex-direction: row;
+    // align-items: center;
+    // justify-content: space-between;
+}
+
+
+.walletAddress {
+    display: flex;
+    flex-direction: column;
+    width: 70%;
+
+    canvas {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 10px;
+    }
+
+    .addressCopy {
+        display: flex;
+        align-items: center;
+        width: auto;
+
+        span {
+            font-size: 12px;
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .copyButton {
+            width: 18px;
+            height: 18px;
+            padding: 8px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+    }
+}
+
+.uploadArea {
+    position: relative;
+
+    input[type="file"] {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .uploadDragger {
+        border: 1px dashed #d9d9d9;
+        border-radius: 6px;
+        padding: 20px;
+        width: 250px;
+        height: 100px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+
+        svg {
+            width: 60px;
+            height: 60px;
+            color: #a2a3a5;
+        }
+
+
+    }
+}
+
+.submitButton {
+    width: 100%;
+    border: 0;
+    background-color: #0166fc;
+    border-radius: 12px;
+    color: white;
+    height: 40px;
+    cursor: pointer;
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
+
+.depositHistory {
+    margin-top: 10px;
+
+    h3 {
+        font-size: 14px;
+        font-weight: bold;
+        margin: 10px;
+    }
+
+    .historyList {
+        padding: 10px;
+        max-height: 150px;
+        overflow: auto;
+    }
+}
+
+.authPage {
+    padding: 10px 16px;
+    // margin-top: 8px;
+}
+
+.uploadInstruction {
+    font-size: 12px;
+    color: #333333;
+    padding-left: 10px;
+    margin-bottom: 10px;
+}
+
+.uploadCard {
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    padding: 10px;
+    // box-shadow: 0 0 24px rgba(0, 0, 0, 0.1);
+}
+
+.uploadSection {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #F8F8F8;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.uploadInfo {
+    width: 200px;
+
+    padding-left: 8px;
+}
+
+.uploadTitle {
+    font-size: 14px;
+    color: #333333;
+    margin-bottom: 6px;
+}
+
+.uploadSubtitle {
+    font-size: 12px;
+    color: #CBCBCB;
+}
+
+.uploadBox {
+    width: 190px;
+    height: 120px;
+    position: relative;
+
+    input[type="file"] {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 1;
+    }
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.formCard {
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.formTitle {
+    padding: 10px;
+    font-size: 12px;
+}
+
+.formItem {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 10px;
+    width: 100%;
+
+    label {
+        width: 120px;
+        font-size: 14px;
+        color: #333333;
+        text-align: right;
+        margin-right: 10px;
+
+        &::before {
+            content: '*';
+            color: #FF4D4F;
+            margin-right: 4px;
+        }
+    }
+
+    input {
+        flex: 1;
+        height: 32px;
+        padding: 0 12px;
+        border: 1px solid #DCDFE6;
+        border-radius: 4px;
+        font-size: 14px;
+
+        &:focus {
+            outline: none;
+            border-color: #0166FC;
+        }
+
+        &::placeholder {
+            color: #C0C4CC;
+        }
+    }
+}
+
+.submitButton {
+    width: 100%;
+    height: 40px;
+    // margin-top: 14px;
+    background-color: #0166FC;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
+
+.changePasswordCard {
+    padding: 20px;
+}
+
+.passwordForm {
+    display: flex;
+    flex-direction: column;
+    // align-items: center;
+    // justify-content: center;
+    gap: 10px;
+
+    .formItemChangePassword {
+        margin-bottom: 24px;
+        width: 100%;
+
+    }
+}
+
+.labelChangePassword {
+    display: block;
+    font-size: 14px;
+    color: #808080;
+    margin-bottom: 8px;
+}
+
+.inputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    input {
+        width: 100%;
+        height: 40px;
+        padding: 0 12px;
+        border: 1px solid #DCDFE6;
+        border-radius: 4px;
+        font-size: 14px;
+        background-color: #FFFFFF;
+
+        &:focus {
+            outline: none;
+            border-color: #0166FC;
+        }
+
+        &::placeholder {
+            color: #C0C4CC;
+        }
+    }
+
+    .sendCodeButton {
+        position: absolute;
+        right: 8px;
+        height: 32px;
+        padding: 0 16px;
+        background-color: #0166FC;
+        border: none;
+        border-radius: 4px;
+        color: #FFFFFF;
+        font-size: 14px;
+        cursor: pointer;
+
+        &:hover {
+            opacity: 0.9;
+        }
+    }
+}
+
+.submitButton {
+    width: 80%;
+    height: 40px;
+    margin: 20px auto;
+    display: block;
+    background-color: #0166FC;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    cursor: pointer;
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
+
+.inviteCard {
+    background-color: #FFFFFF;
+    margin: 40px;
+    border-radius: 10px;
+    text-align: center;
+    padding: 40px;
+    box-shadow: rgba(161, 161, 161, 0.09) 0px 0px 24px 0px;
+}
+
+.inviteCodeSection {
+    margin-bottom: 10px;
+
+    .label {
+        font-size: 12px;
+        color: #808080;
+        text-align: center;
+    }
+
+    .code {
+        margin: 10px 0;
+        font-size: 16px;
+        color: #0166FC;
+    }
+}
+
+.qrCode {
+    margin: 0 auto;
+    display: block;
+    width: 160px;
+    height: 160px;
+}
+
+.inviteLink {
+    text-align: center;
+    font-size: 12px;
+    margin: 10px 0;
+    padding: 0 20px;
+    color: #333333;
+    word-break: break-all;
+}
+
+.copyButton {
+    width: 100%;
+    height: 36px;
+    background-color: #0166FC;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+
+    &:hover {
+        opacity: 0.9;
+    }
+
+    &:active {
+        transform: scale(0.98);
+    }
+}
+
+.selectNetwork {
+    width: 65%;
+    height: 32px;
+    padding: 0 12px;
+    cursor: pointer;
+    border: 1px solid #DCDFE6;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.inputNumber {
+    width: 60%;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid #DCDFE6;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: text;
+}
+
+
+.emailInput {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    // border: 1px solid #DCDFE6;
+    border-radius: 4px;
+    font-size: 18px;
+}
+
+.copyButton {
+    width: 80px;
+    height: 40px;
+    background-color: #0166FC;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.announcementCard {
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    padding: 10px;
+
+    .announcementContent {
+        font-size: 14px;
+        color: #5a5a5a;
+    }
+}
+
+
+.serviceCard {
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.serviceButton {
+    width: 100%;
+    height: 40px;
+    background-color: #0166FC;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+
+    a {
+        color: #FFFFFF;
+        text-decoration: none;
+    }
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
+
+.walletList {
+    padding: 0 20px;
+}
+
+.balanceSection {
+    padding: 10px 0;
+}
+
+.sectionTitle {
+    font-weight: bold;
+    color: #333333;
+}
+
+.balanceAmount {
+    font-weight: 800;
+    color: #0166FC;
+    font-size: 16px;
+}
+
+.cardList {
+    display: flex;
+    flex-wrap: wrap;
+    overflow: auto;
+    margin-top: 10px;
+}
+
+.currencyList {
+    display: flex;
+    flex-wrap: wrap;
+    overflow: auto;
+    margin: 10px 0;
+}
+
+.addCard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 140px;
+    width: 180px;
+    border: 1px solid #DCDFE6;
+    border-radius: 10px;
+    // box-shadow: 0 0 24px rgba(134, 134, 134, 0.404);
+    cursor: pointer;
+
+    &:hover {
+        opacity: 0.8;
+    }
+}
+
+.addIcon {
+    font-size: 40px;
+    color: #585858;
+
+    svg {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+// For the digital currency section, the card height is different
+.currencyList .addCard {
+    height: 100px;
+}
+
+.copyButtonInviteFriend {
+    width: 100%;
+    height: 36px;
+    background-color: #0166FC;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+}

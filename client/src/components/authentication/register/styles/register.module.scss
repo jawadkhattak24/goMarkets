@@ -1,0 +1,118 @@
+.registerDialogOverlay {
+    // position: absolute;
+    // top: 0;
+    // left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.loginDialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    --dialog-width: 480px;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    width: 450px;
+    margin: var(--dialog-margin-top) auto 0;
+    background: white;
+    padding: 20px;
+
+}
+
+.header {
+    text-align: center;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.headerText {
+    color: #666;
+    font-size: 12px;
+}
+
+.closeButton {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+
+    svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+.inputContainer {
+    margin-bottom: 28px;
+}
+
+.inputLabel {
+    color: #333;
+    font-size: 14px;
+    padding-left: 10px;
+    margin-bottom: 14px;
+}
+
+.baseInput {
+    width: 88%;
+    margin-top: 14px;
+    position: relative;
+
+    input {
+        width: 100%;
+        padding: 12px 20px;
+        border: 1px solid #dcdfe6;
+        border-radius: 20px;
+        font-size: 14px;
+
+        &::placeholder {
+            color: #999;
+        }
+    }
+}
+
+.verificationContainer {
+    position: relative;
+
+    button {
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 15px;
+        padding: 8px 15px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+}
+
+.registerButton {
+    width: 100%;
+    background: #0165fa;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 20px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.loadingButton {
+    cursor: not-allowed;
+    background-color: #5197ff;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 20px;
+    font-size: 16px;
+}

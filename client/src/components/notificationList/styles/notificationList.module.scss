@@ -1,0 +1,26 @@
+.notificationList {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 9999;
+}
+
+.notification {
+  margin-bottom: 0.5rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: white;
+
+  &.success {
+    background-color: #22c55e;
+  }
+
+  &.error {
+    background-color: #ef4444;
+  }
+
+  &.info {
+    background-color: #3b82f6;
+  }
+}

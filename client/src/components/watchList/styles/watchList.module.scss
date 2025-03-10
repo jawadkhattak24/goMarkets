@@ -1,0 +1,88 @@
+.watchList {
+    display: flex;
+    flex-direction: column;
+    width: 350px;
+    height: 620px;
+    background-color: #ffffff;
+    overflow: auto;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
+    .searchContainer {
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        // width: 50%;
+        // height:50px;
+
+        .searchInput {
+            position: relative;
+            width: 50%;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            background: #f8f8f8;
+            // border: 1px solid #dcdfe6;
+            border-radius: 20px;
+            margin-right: 20px;
+
+            &:focus-within {
+                border-color: var(--primary-color, #409eff);
+            }
+
+            .searchIcon {
+                margin-left: 16px;
+                margin-right: 10px;
+                font-size: 20px;
+                color: var(--icon-color, #808080);
+
+                svg {
+                    width: 1em;
+                    height: 1em;
+                }
+            }
+
+            input {
+                flex: 1;
+                width: 100px;
+                border: none;
+                outline: none;
+                padding: 8px;
+                padding-right: 10px;
+                background: transparent;
+                font-size: 14px;
+
+                &::placeholder {
+                    color: var(--placeholder-color, #999);
+                }
+            }
+        }
+
+        .select {
+            height: 34px;
+            width: 150px;
+            cursor: pointer;
+            padding: 0 10px;
+            color: #808080;
+            border: 1px solid #dcdfe6;
+            outline: none;
+            background: transparent;
+        }
+    }
+
+    .watchListContainer {
+        display: flex;
+        flex-direction: column;
+
+        height: 100%;
+        margin-left: 10px;
+        overflow-y: auto;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
+}
