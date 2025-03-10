@@ -97,7 +97,7 @@ const PositionHolding = () => {
             viewBox="0 0 79 86"
             version="1.1"
             xmlns="http://www.w3.org/2000/svg"
-            xmlns:xlink="http://www.w3.org/1999/xlink"
+            xmlnsXlink="http://www.w3.org/1999/xlink"
           >
             <defs>
               <linearGradient
@@ -207,7 +207,7 @@ const PositionHolding = () => {
                       id="Mask"
                       fill="var(--el-empty-fill-color-8)"
                       transform="translate(8.500000, 18.000000) scale(-1, 1) translate(-8.500000, -18.000000) "
-                      xlink:href="#path-3-el-id-615-125"
+                      xlinkHref="#path-3-el-id-615-125"
                     ></use>
                     <polygon
                       id="Rectangle-Copy"
@@ -272,7 +272,7 @@ const PendingOrders = () => {
             viewBox="0 0 79 86"
             version="1.1"
             xmlns="http://www.w3.org/2000/svg"
-            xmlns:xlink="http://www.w3.org/1999/xlink"
+            xmlnsXlink="http://www.w3.org/1999/xlink"
           >
             <defs>
               <linearGradient
@@ -382,7 +382,7 @@ const PendingOrders = () => {
                       id="Mask"
                       fill="var(--el-empty-fill-color-8)"
                       transform="translate(8.500000, 18.000000) scale(-1, 1) translate(-8.500000, -18.000000) "
-                      xlink:href="#path-3-el-id-615-125"
+                      xlinkHref="#path-3-el-id-615-125"
                     ></use>
                     <polygon
                       id="Rectangle-Copy"
@@ -448,7 +448,7 @@ const History = () => {
             viewBox="0 0 79 86"
             version="1.1"
             xmlns="http://www.w3.org/2000/svg"
-            xmlns:xlink="http://www.w3.org/1999/xlink"
+            xmlnsXlink="http://www.w3.org/1999/xlink"
           >
             <defs>
               <linearGradient
@@ -558,7 +558,7 @@ const History = () => {
                       id="Mask"
                       fill="var(--el-empty-fill-color-8)"
                       transform="translate(8.500000, 18.000000) scale(-1, 1) translate(-8.500000, -18.000000) "
-                      xlink:href="#path-3-el-id-615-125"
+                      xlinkHref="#path-3-el-id-615-125"
                     ></use>
                     <polygon
                       id="Rectangle-Copy"
