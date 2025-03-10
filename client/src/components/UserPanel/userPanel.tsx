@@ -462,6 +462,7 @@ const RealNameVerification = () => {
   const [backImage, setBackImage] = useState<File | null>(null);
   const [frontPreview, setFrontPreview] = useState<string | null>(null);
   const [backPreview, setBackPreview] = useState<string | null>(null);
+  const [formSubmitted, setFormSubmitted] = useState(false);
 
   const handleImageUpload = (side: "front" | "back", file: File) => {
     const previewUrl = URL.createObjectURL(file);
@@ -481,6 +482,8 @@ const RealNameVerification = () => {
     };
   }, [frontPreview, backPreview]);
 
+  useEffect(() => {}, [formSubmitted]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("submit");
@@ -488,7 +491,7 @@ const RealNameVerification = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-      "https://go-markets-api.vercel.app/api/user/real-name-verification",
+        "https://go-markets-api.vercel.app/api/user/real-name-verification",
         {
           currentUser,
         },
@@ -496,6 +499,7 @@ const RealNameVerification = () => {
       );
 
       if (response.status === 200) {
+        setFormSubmitted(true);
         showNotification("Verification submitted for auditing", "success");
       } else {
         showNotification("Failed to submit verification", "error");
@@ -505,7 +509,7 @@ const RealNameVerification = () => {
     }
   };
 
-  return currentUser?.verificationStatus === "UNVERIFIED" ? (
+  return currentUser?.verificationStatus === "UNVERIFIED" && !formSubmitted ? (
     <div className={styles.authPage}>
       <div className={styles.uploadInstruction}>
         Please upload the front and back of your passport/ID
@@ -610,7 +614,7 @@ const RealNameVerification = () => {
     </div>
   ) : (
     <div>
-      {currentUser?.verificationStatus === "AUDITING" ? (
+      {currentUser?.verificationStatus === "AUDITING" || formSubmitted ? (
         <div
           style={{
             textAlign: "center",
