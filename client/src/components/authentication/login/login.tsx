@@ -3,12 +3,19 @@ import styles from "../register/styles/register.module.scss";
 import axios from "axios";
 import { useAuth } from "../../../contexts/authContext";
 import { useNotification } from "../../../contexts/notificationContext";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 const Login = ({
   setIsLoginOpen,
+  setIsRegisterOpen,
+  setIsForgotPasswordOpen,
 }: {
   setIsLoginOpen: (value: boolean) => void;
+  setIsRegisterOpen: (value: boolean) => void;
+  setIsForgotPasswordOpen: (value: boolean) => void;
 }) => {
   const [email, setEmail] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
   const [password, setPassword] = useState("");
   const { showNotification, isLoading, setIsLoading } = useNotification();
 
@@ -23,7 +30,7 @@ const Login = ({
   //     // Add verification code sending logic here
   //   };
 
-const handleLogin = async () => {
+  const handleLogin = async () => {
     setIsLoading(true);
     try {
       const response = await axios.post(
@@ -78,39 +85,51 @@ const handleLogin = async () => {
           <div className={styles.inputContainer}>
             <div className={styles.inputLabel}>Password</div>
             <div className={styles.baseInput}>
-              <input
-                type="password"
-                placeholder="Please enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Please enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    right: "15px",
+                    fontSize: "1.2rem",
+                    color: "#0165fa",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* <div className={styles.inputContainer}>
-          <div className={styles.inputLabel}>Invitation Code</div>
-          <div className={styles.baseInput}>
-            <input
-              type="text"
-              placeholder="Please enter the invitation code"
-              value={invitationCode}
-              onChange={(e) => setInvitationCode(e.target.value)}
-            />
+          <div className={styles.linksContainer}>
+            <div
+              onClick={() => {
+                setIsRegisterOpen(true);
+                setIsLoginOpen(false);
+              }}
+              className={styles.link}
+            >
+              New User? Join Now
+            </div>
+            <div
+              className={styles.link}
+              onClick={() => {
+                setIsForgotPasswordOpen(true);
+                setIsLoginOpen(false);
+              }}
+            >
+              Forgot password?
+            </div>
           </div>
-        </div> */}
-
-          {/* <div className={styles.inputContainer}>
-          <div className={styles.inputLabel}>Verification Code</div>
-          <div className={`${styles.baseInput} ${styles.verificationContainer}`}>
-            <input
-              type="text"
-              placeholder="Please enter the verification code"
-              value={verificationCode}
-              onChange={(e) => setVerificationCode(e.target.value)}
-            />
-            <button onClick={handleSendVerification}>Send</button>
-          </div>
-        </div> */}
 
           <button
             disabled={isLoading}

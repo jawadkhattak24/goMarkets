@@ -9,7 +9,7 @@ import UserPanel from "./components/UserPanel/userPanel";
 import PositionHoldingHistory from "./components/positionHoldingHistory/positionHoldingHistory";
 import { NotificationList } from "./components/notificationList/notificationList";
 import { NotificationProvider } from "./contexts/notificationContext";
-
+import ForgotPassword from "./components/authentication/forgotPassword/forgotPassword";
 import { AuthProvider, useAuth } from "./contexts/authContext";
 
 const AppContent = () => {
@@ -22,7 +22,7 @@ const AppContent = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isUserPanelOpen, setIsUserPanelOpen] = useState(false);
   console.log("Current symbol: ", currentSymbol);
-
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [selectedPairPrice, setSelectedPairPrice] = useState(0);
 
   const handleSymbolChange = (symbol: string, pricePrecision: number) => {
@@ -101,7 +101,16 @@ const AppContent = () => {
             setIsLoginOpen={setIsLoginOpen}
           />
         )}
-        {isLoginOpen && <Login setIsLoginOpen={setIsLoginOpen} />}
+        {isLoginOpen && (
+          <Login       
+            setIsRegisterOpen={setIsRegisterOpen}
+            setIsLoginOpen={setIsLoginOpen}
+            setIsForgotPasswordOpen={setIsForgotPasswordOpen}
+          />
+        )}
+        {isForgotPasswordOpen && (
+          <ForgotPassword setIsForgotPasswordOpen={setIsForgotPasswordOpen} />
+        )}
         {isUserPanelOpen && (
           <UserPanel setIsUserPanelOpen={setIsUserPanelOpen} />
         )}

@@ -14,16 +14,16 @@ const Register = ({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  //   const [invitationCode, setInvitationCode] = useState("");
-  //   const [verificationCode, setVerificationCode] = useState("");
+  const [invitationCode, setInvitationCode] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
 
   const handleClose = () => {
     setIsRegisterOpen(false);
   };
 
-  //   const handleSendVerification = () => {
-  //     // Add verification code sending logic here
-  //   };
+  const handleSendVerification = () => {
+    // Add verification code sending logic here
+  };
 
   const handleRegister = async () => {
     setIsLoading(true);
@@ -65,7 +65,7 @@ const Register = ({
           </button>
         </header>
 
-        <div>
+        <div className={styles.registerForm}>
           <div className={styles.inputContainer}>
             <div className={styles.inputLabel}>Enter your Email</div>
             <div className={styles.baseInput}>
@@ -102,30 +102,33 @@ const Register = ({
             </div>
           </div>
 
-          {/* <div className={styles.inputContainer}>
-          <div className={styles.inputLabel}>Invitation Code</div>
-          <div className={styles.baseInput}>
-            <input
-              type="text"
-              placeholder="Please enter the invitation code"
-              value={invitationCode}
-              onChange={(e) => setInvitationCode(e.target.value)}
-            />
+          <div className={styles.inputContainer}>
+            <div className={styles.inputLabel}>Invitation Code</div>
+            <div className={styles.baseInput}>
+              <input
+                type="text"
+                placeholder="Please enter the invitation code"
+                value={invitationCode}
+                onChange={(e) => setInvitationCode(e.target.value)}
+              />
+            </div>
           </div>
-        </div> */}
 
-          {/* <div className={styles.inputContainer}>
-          <div className={styles.inputLabel}>Verification Code</div>
-          <div className={`${styles.baseInput} ${styles.verificationContainer}`}>
-            <input
-              type="text"
-              placeholder="Please enter the verification code"
-              value={verificationCode}
-              onChange={(e) => setVerificationCode(e.target.value)}
-            />
-            <button onClick={handleSendVerification}>Send</button>
+          <div className={styles.inputContainer}>
+            <div className={styles.inputLabel}>Verification Code</div>
+            <div
+              className={`${styles.baseInput} ${styles.verificationContainer}`}
+            >
+              <input
+                className={styles.verificationInput}
+                type="text"
+                placeholder="Please enter the verification code"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+              />
+              <button onClick={handleSendVerification}>Send</button>
+            </div>
           </div>
-        </div> */}
 
           <button
             className={`${styles.registerButton} ${
