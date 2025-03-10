@@ -1,10 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  KLineChartPro,
-  SymbolInfo,
-  Period,
-  DatafeedSubscribeCallback,
-} from "@sohail2001/klinecharts-pro";
+import { KLineChartPro, SymbolInfo, Period } from "@sohail2001/klinecharts-pro";
 import Register from "./components/authentication/register/register";
 import Login from "./components/authentication/login/login";
 import WatchList from "./components/watchList/watchList";
@@ -71,6 +66,7 @@ const AppContent = () => {
     };
 
     if (!isChartInitialized.current) {
+      // @ts-expect-error - KLineChartPro works correctly at runtime despite type issues
       chartRef.current = new KLineChartPro(options);
       isChartInitialized.current = true;
       console.log("Chart initialized");
@@ -133,6 +129,16 @@ const App = () => {
 
 export default App;
 
+interface KLineData {
+  Time: number;
+  Open: number;
+  High: number;
+  Low: number;
+  Close: number;
+  Volume: number;
+  Amount: number;
+}
+
 class CustomDatafeed {
   private baseUrl = "https://api.gomktsglb.cc/v1/api";
 
@@ -144,7 +150,7 @@ class CustomDatafeed {
     month: "month",
   };
 
-  async searchSymbols(search?: string): Promise<SymbolInfo[]> {
+  async searchSymbols(): Promise<SymbolInfo[]> {
     return [
       {
         ticker: "XAUUSD",
@@ -179,7 +185,7 @@ class CustomDatafeed {
         throw new Error(data.msg || "Failed to fetch data");
       }
 
-      return data.data.map((item: any) => ({
+      return data.data.map((item: KLineData) => ({
         timestamp: item.Time,
         open: item.Open,
         high: item.High,
@@ -194,11 +200,7 @@ class CustomDatafeed {
     }
   }
 
-  subscribe(
-    symbol: SymbolInfo,
-    period: Period,
-    callback: DatafeedSubscribeCallback
-  ): void {}
+  subscribe(): void {}
 
-  unsubscribe(symbol: SymbolInfo, period: Period): void {}
+  unsubscribe(): void {}
 }

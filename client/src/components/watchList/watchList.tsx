@@ -123,7 +123,7 @@ const WatchList = ({
             key={pair.symbol}
             symbol={pair.symbol}
             setSelectedPairPrice={setSelectedPairPrice}
-            ticker={pair.pricePrecision}
+            ticker={pair.pricePrecision.toString()}
             onClick={() => handleClick(pair.symbol, pair.pricePrecision)}
           />
         ))}

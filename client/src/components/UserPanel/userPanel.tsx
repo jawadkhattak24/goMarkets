@@ -29,7 +29,7 @@ const menuItems: MenuItem[] = [
 
 const UserPanel: FC<UserPanelProps> = ({ setIsUserPanelOpen }) => {
   const [activeMenuItem, setActiveMenuItem] = useState("billing");
-  const { logout, currentUser } = useAuth();
+  const { logout } = useAuth();
   const { showNotification } = useNotification();
 
   return (

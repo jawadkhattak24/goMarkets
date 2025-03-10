@@ -2,7 +2,19 @@ import { useEffect, useState } from "react";
 
 import styles from "./styles/tradingPair.module.scss";
 
-const TradingPair = ({ symbol, onClick, ticker, setSelectedPairPrice }) => {
+interface TradingPairProps {
+  symbol: string;
+  onClick: (symbol: string) => void;
+  ticker: string;
+  setSelectedPairPrice: ((price: number) => void) | undefined;
+}
+
+const TradingPair = ({
+  symbol,
+  onClick,
+  ticker,
+  setSelectedPairPrice,
+}: TradingPairProps) => {
   const [percentageChange, setPercentageChange] = useState(0);
   const isNegative = percentageChange < 0;
   const directionClass = isNegative ? styles.down : styles.up;
@@ -44,7 +56,9 @@ const TradingPair = ({ symbol, onClick, ticker, setSelectedPairPrice }) => {
       className={styles.tradingPairContainer}
       onClick={() => {
         onClick(symbol);
-        setSelectedPairPrice(price);
+        if (setSelectedPairPrice) {
+          setSelectedPairPrice(price);
+        }
       }}
     >
       <div className={styles.symbolSection}>

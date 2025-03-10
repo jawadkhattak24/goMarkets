@@ -27,7 +27,7 @@ const OrderPanel = ({
   const [setLoss, setSetLoss] = useState(false);
   const [takeProfit, setTakeProfit] = useState(false);
   const [lots, setLots] = useState(0.1);
-  const { isLoggedIn, currentUser } = useAuth();
+  const { currentUser } = useAuth();
 
   return (
     <>
