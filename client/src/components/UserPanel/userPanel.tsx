@@ -488,7 +488,7 @@ const RealNameVerification = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://localhost:3000/api/user/real-name-verification",
+      "https://go-markets-api.vercel.app/api/user/real-name-verification",
         {
           currentUser,
         },

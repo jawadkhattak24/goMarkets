@@ -23,11 +23,11 @@ const Login = ({
   //     // Add verification code sending logic here
   //   };
 
-  const handleLogin = async () => {
+const handleLogin = async () => {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        `http://localhost:3000/api/user/login`,
+        `https://go-markets-api.vercel.app/api/user/login`,
         {
           email,
           password,

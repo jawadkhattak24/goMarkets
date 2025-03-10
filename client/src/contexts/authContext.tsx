@@ -46,9 +46,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
       if (token) {
-        const response = await axios.get("http://localhost:3000/api/user/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axios.get(
+          "https://go-markets-api.vercel.app/api/user/me",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         setCurrentUser(response.data.user);
       }
     };
