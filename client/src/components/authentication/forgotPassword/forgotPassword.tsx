@@ -25,6 +25,10 @@ const ForgotPassword = ({
     // Add verification code sending logic here
   };
 
+
+  
+
+
   return (
     <div className={styles.registerDialogOverlay}>
       <div className={styles.loginDialog}>
