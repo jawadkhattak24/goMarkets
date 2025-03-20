@@ -1,0 +1,82 @@
+.positionHoldingContainer {
+  width: 100%;
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tableContainer {
+  min-width: 100%;
+  padding: 1rem;
+}
+
+.tableContent {
+  width: 100%;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 
+    minmax(80px, 1fr)    /* Transaction pairs */
+    minmax(100px, 1fr)   /* Reservation number */
+    minmax(80px, 1fr)    /* Direction */
+    minmax(80px, 1fr)    /* Lots */
+    minmax(100px, 1fr)   /* Lower unit price */
+    minmax(100px, 1fr)   /* Current price */
+    minmax(80px, 1fr)    /* Take Profit */
+    minmax(80px, 1fr)    /* Set Loss */
+    minmax(100px, 1fr)   /* Handling fee */
+    minmax(100px, 1fr)   /* Margin */
+    minmax(80px, 1fr)    /* Profit */
+    minmax(120px, 1fr)   /* Open time */
+    minmax(120px, 1fr);  /* Closing time */
+  gap: 8px;
+  padding: 8px 12px;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+
+  &:hover {
+    background-color: #f8f9fa;
+  }
+}
+
+.cell {
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rightAlign {
+  text-align: right;
+}
+
+.buyButton {
+  display: inline-block;
+  padding: 4px 12px;
+  background-color: #0066ff;
+  color: white;
+  border-radius: 4px;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.sellButton {
+  display: inline-block;
+  padding: 4px 12px;
+  background-color: #ff4d4f;
+  color: white;
+  border-radius: 4px;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.positive {
+  color: #52c41a;
+}
+
+.negative {
+  color: #ff4d4f;
+} 

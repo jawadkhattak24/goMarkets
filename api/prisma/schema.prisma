@@ -20,14 +20,49 @@ enum VerificationStatus {
   REJECTED
 }
 
+
+
 model User {
   id        String   @id @default(cuid())
-  uid      String   @unique
+  uid      String?   @unique @default(uuid())
   email     String   @unique
   password  String
   availableFunds Int @default(0)
   verificationStatus VerificationStatus? @default(UNVERIFIED)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  trades Trade[]
+}
+
+enum TradeDirection {
+  BUY
+  SELL
+}
+
+enum TradeStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+
+model Trade {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  transactionPairs String
+  reservationNumber String
+  direction TradeDirection
+  lots Float
+  lowerUnitPrice Float
+  currentPrice Float?
+  handlingFee Float
+  margin Float?
+  profit Float?
+  openTime DateTime?
+  closeTime DateTime?
+  status TradeStatus
 }
 

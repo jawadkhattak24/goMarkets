@@ -4,6 +4,8 @@ import styles from "./styles/orderPanel.module.scss";
 import MinusIcon from "./icons/minus";
 import PlusIcon from "./icons/plus";
 import { useAuth } from "../../contexts/authContext";
+import axios from "axios";
+import { useNotification } from "../../contexts/notificationContext";
 
 const OrderPanel = ({
   isRegisterOpen,
@@ -14,6 +16,8 @@ const OrderPanel = ({
   setIsUserPanelOpen,
   symbol,
   selectedPairPrice,
+  setIsOrderSubmitted,
+
 }: {
   isRegisterOpen: boolean;
   setIsRegisterOpen: (value: boolean) => void;
@@ -23,11 +27,47 @@ const OrderPanel = ({
   setIsUserPanelOpen: (value: boolean) => void;
   symbol: string;
   selectedPairPrice: number;
+  setIsOrderSubmitted: (value: boolean) => void;
 }) => {
   const [setLoss, setSetLoss] = useState(false);
   const [takeProfit, setTakeProfit] = useState(false);
-  const [lots, setLots] = useState(0.1);
   const { currentUser } = useAuth();
+  const [lots, setLots] = useState(0.01);
+  const { showNotification } = useNotification();
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmitOrder = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    const direction = e.currentTarget.id;
+    console.log("Opening a trade")
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.post("http://localhost:3000/api/trade/user/openTrade",
+        {
+          userId: currentUser?.id,
+          symbol: symbol,
+          direction: direction,
+          lots: lots,
+          price: selectedPairPrice,
+        },
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+      if (response.status === 201) {
+        setIsOrderSubmitted(true)
+        showNotification("Order submitted successfully", "success");
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Error submitting order:", error);
+      showNotification("Error submitting order", "error");
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -69,17 +109,19 @@ const OrderPanel = ({
           <div className={styles.symbolName}>{symbol}</div>
           <div className={styles.price}>{selectedPairPrice.toFixed(2)}</div>
 
-          <div className={styles.selectWrapper}>
-            <select
+          <div className={styles.orderTypeWrapper}>
+            {/* <select
               style={{ cursor: "pointer" }}
               className={styles.select}
               defaultValue=""
-            >
-              <option value="" disabled>
-                Market Price
-              </option>
-              <option value="pending">Pending Orders</option>
-            </select>
+            > */}
+            <button className={styles.orderTypeButton}>
+              Market Price
+            </button>
+            <button className={styles.orderTypeButton}>
+              Pending Orders
+            </button>
+            {/* </select> */}
           </div>
 
           <div className={styles.multiplierSection}>
@@ -186,8 +228,8 @@ const OrderPanel = ({
           </div>
 
           <div className={styles.actionButtons}>
-            <button className={styles.buyButton}>Buy</button>
-            <button className={styles.sellButton}>Sell</button>
+            <button disabled={loading} id="buy" className={styles.buyButton} onClick={handleSubmitOrder}> {loading ? "Buying..." : "Buy"}</button>
+            <button disabled={loading} id="sell" className={styles.sellButton} onClick={handleSubmitOrder}> {loading ? "Selling..." : "Sell"}</button>
           </div>
         </div>
       </div>

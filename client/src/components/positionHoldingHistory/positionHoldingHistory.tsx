@@ -1,7 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./styles/positionHoldingHistory.module.scss";
+import axios from "axios";
+import PositionHolding from './../PositionHolding/PositionHolding';
 
-export default function PositionHoldingHistory() {
+export default function PositionHoldingHistory({ isOrderSubmitted }: { isOrderSubmitted: boolean }) {
+
+  const [positionHolding, setPositionHolding] = useState([]);
+  const [pendingOrders, setPendingOrders] = useState([]);
+  const [history, setHistory] = useState([]);
+
+
+  useEffect(() => {
+
+    const fetchPositionHolding = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://localhost:3000/api/trade/user/positionHolding", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        console.log("Trades: ", response.data.trades);
+        setPositionHolding(response.data.trades);
+      } catch (error) {
+        console.error("Error fetching position holding:", error);
+      }
+    };
+
+    fetchPositionHolding();
+  }, [isOrderSubmitted]);
+
+
   const [currentPanel, setCurrentPanel] = useState("positionHolding");
   return (
     <div
@@ -15,25 +44,22 @@ export default function PositionHoldingHistory() {
         >
           <div
             onClick={() => setCurrentPanel("positionHolding")}
-            className={`${styles.py10} ${styles.pr20} ${styles.cursorPointer} ${
-              currentPanel === "positionHolding" ? styles.textPrimary : ""
-            }`}
+            className={`${styles.py10} ${styles.pr20} ${styles.cursorPointer} ${currentPanel === "positionHolding" ? styles.textPrimary : ""
+              }`}
           >
             Position holding
           </div>
           <div
             onClick={() => setCurrentPanel("pendingOrders")}
-            className={`${styles.py10} ${styles.px20} ${styles.cursorPointer} ${
-              currentPanel === "pendingOrders" ? styles.textPrimary : ""
-            }`}
+            className={`${styles.py10} ${styles.px20} ${styles.cursorPointer} ${currentPanel === "pendingOrders" ? styles.textPrimary : ""
+              }`}
           >
             Pending Orders
           </div>
           <div
             onClick={() => setCurrentPanel("history")}
-            className={`${styles.py10} ${styles.px20} ${styles.cursorPointer} ${
-              currentPanel === "history" ? styles.textPrimary : ""
-            }`}
+            className={`${styles.py10} ${styles.px20} ${styles.cursorPointer} ${currentPanel === "history" ? styles.textPrimary : ""
+              }`}
           >
             History
           </div>
@@ -52,14 +78,14 @@ export default function PositionHoldingHistory() {
           </div>
         </div>
       </div>
-      {currentPanel === "positionHolding" && <PositionHolding />}
+      {currentPanel === "positionHolding" && <PositionHoldingContainer />}
       {currentPanel === "pendingOrders" && <PendingOrders />}
       {currentPanel === "history" && <History />}
     </div>
   );
 }
 
-const PositionHolding = () => {
+const PositionHoldingContainer = () => {
   return (
     <div className={`${styles.px20} ${styles.text14} ${styles.mb10}`}>
       <div
@@ -91,7 +117,11 @@ const PositionHolding = () => {
         <div className={`${styles.flex1} ${styles.textCenter}`}>Open Time</div>
         <div className={`${styles.flex2} ${styles.textCenter}`}>Operation</div>
       </div>
-      <div className={styles.empty}>
+      {/* {positionHolding.length > 0 ? ( */}
+      <PositionHolding />
+
+      {/* ) : ( */}
+      {/* <div className={styles.empty}>
         <div className={styles.emptyImage}>
           <svg
             viewBox="0 0 79 86"
@@ -230,8 +260,9 @@ const PositionHolding = () => {
         </div>
         <div className={styles.emptyDescription}>
           <p>No data yet</p>
-        </div>
-      </div>
+        </div> */}
+      {/* </div> */}
+      {/* )} */}
     </div>
   );
 };

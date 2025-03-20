@@ -34,12 +34,19 @@ const Login = ({
     setIsLoading(true);
     try {
       const response = await axios.post(
-        `https://go-markets-api.vercel.app/api/user/login`,
+        `http://localhost:3000/api/user/login`,
         {
           email,
           password,
         }
       );
+      // const response = await axios.post(
+      //   `https://go-markets-api.vercel.app/api/user/login`,
+      //   {
+      //     email,
+      //     password,
+      //   }
+      // );
       console.log("User logged in", response.data);
       if (response.status === 200) {
         login(response.data.user, response.data.token);
@@ -133,9 +140,8 @@ const Login = ({
 
           <button
             disabled={isLoading}
-            className={`${styles.registerButton} ${
-              isLoading ? styles.loadingButton : ""
-            }`}
+            className={`${styles.registerButton} ${isLoading ? styles.loadingButton : ""
+              }`}
             onClick={handleLogin}
           >
             {isLoading ? "Logging in..." : "Login"}
