@@ -82,4 +82,25 @@ router.post("/user/openTrade", async (req, res) => {
   }
 });
 
+router.post("/user/closeTrade", async (req, res) => {
+  try {
+    const { tradeId, price, profit } = req.body;
+
+    const trade = await prisma.trade.update({
+      where: { id: tradeId },
+      data: {
+        status: "CLOSED",
+        currentPrice: price,
+        profit: profit,
+        closeTime: new Date(),
+      },
+    });
+
+    res.status(200).json({ message: "Trade closed successfully", trade });
+  } catch (error) {
+    console.error("Error closing trade:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 module.exports = router;
