@@ -137,6 +137,23 @@ router.post("/user/closeTrade", async (req, res) => {
       },
     });
 
+    const user = await prisma.user.findUnique({
+      where: { id: existingTrade.userId },
+    });
+
+    const updatedUser = await prisma.user.update({
+      where: { id: existingTrade.userId },
+      data: {
+        availableFunds: user.availableFunds + profit,
+      },
+    });
+
+    if (updatedUser) {
+      console.log("User updated successfully");
+    } else {
+      console.log("User update failed");
+    }
+
     console.log("Trade closed successfully", trade);
 
     res.status(200).json({ message: "Trade closed successfully", trade });

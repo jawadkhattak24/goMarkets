@@ -20,11 +20,8 @@ enum VerificationStatus {
   REJECTED
 }
 
-
-
 model User {
   id        String   @id @default(cuid())
-  uid      String?   @unique @default(uuid())
   email     String   @unique
   password  String
   availableFunds Int @default(0)
@@ -32,6 +29,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   trades Trade[]
+
 }
 
 enum TradeDirection {
@@ -44,7 +42,6 @@ enum TradeStatus {
   CLOSED
   CANCELLED
 }
-
 
 model Trade {
   id String @id @default(cuid())
@@ -65,4 +62,5 @@ model Trade {
   closeTime DateTime?
   status TradeStatus
 }
+
 

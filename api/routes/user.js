@@ -16,7 +16,7 @@ router.post("/register", async (req, res) => {
       data: {
         email,
         password: hashedPassword,
-        availableFunds: 47587,
+        availableFunds: 478,
       },
       select: {
         id: true,
