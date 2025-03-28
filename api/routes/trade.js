@@ -8,7 +8,7 @@ router.get("/user/positionHolding", async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const userId = decoded.userId;
 
     const trades = await prisma.trade.findMany({
       where: {
@@ -36,7 +36,9 @@ router.get("/user/tradeHistory", async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const userId = decoded.userId;
+
+    console.log("userId", userId);
 
     const trades = await prisma.trade.findMany({
       where: {
@@ -64,17 +66,34 @@ router.get("/user/tradeHistory", async (req, res) => {
 router.post("/user/openTrade", async (req, res) => {
   console.log("Trade order received");
   try {
-    const { userId, symbol, direction, lots, price } = req.body;
+    const {
+      userId,
+      symbol,
+      direction,
+      lots,
+      price,
+      margin,
+      handlingFee,
+      leverage,
+    } = req.body;
 
-    console.log(userId, symbol, direction, lots, price);
+    console.log(
+      "Order Data",
+      userId,
+      symbol,
+      direction,
+      lots,
+      price,
+      margin,
+      handlingFee,
+      leverage
+    );
 
     const reservationNumber =
       "#" +
       Math.floor(Math.random() * 1000000)
         .toString()
         .padStart(6, "0");
-    const handlingFee = parseFloat((lots * 0.09541).toFixed(6));
-    const margin = parseFloat((lots * 95.40964).toFixed(2));
     const profit = 0.0;
 
     console.log("Send trade order to database");
@@ -97,8 +116,25 @@ router.post("/user/openTrade", async (req, res) => {
       },
     });
 
+    // const user = await prisma.user.findUnique({
+    //   where: { id: userId },
+    // });
+
+    // const updatedUser = await prisma.user.update({
+    //   where: { id: userId },
+    //   data: {
+    //     availableFunds: user.availableFunds - margin,
+    //   },
+    // });
+
+    // if (updatedUser) {
+    //   console.log("User updated successfully", updatedUser);
+    // } else {
+    //   console.log("User update failed");
+    // }
+
     if (trade) {
-      console.log("Trade opened successfully");
+      console.log("Trade opened successfully", trade);
     } else {
       console.log("Trade opening failed");
     }
@@ -112,12 +148,10 @@ router.post("/user/openTrade", async (req, res) => {
 
 router.post("/user/closeTrade", async (req, res) => {
   try {
-    const { Id, price, profit } = req.body;
+    const { Id, currentPrice, profit } = req.body;
 
-    // Log the request data for debugging
-    console.log("Closing trade with:", { Id, price, profit });
+    console.log("Closing trade with:", { Id, currentPrice, profit });
 
-    // First check if the trade exists
     const existingTrade = await prisma.trade.findUnique({
       where: { id: Id },
     });
@@ -126,12 +160,11 @@ router.post("/user/closeTrade", async (req, res) => {
       return res.status(404).json({ error: "Trade not found" });
     }
 
-    // Then update it
     const trade = await prisma.trade.update({
       where: { id: Id },
       data: {
         status: "CLOSED",
-        currentPrice: price,
+        currentPrice: currentPrice,
         profit: profit,
         closeTime: new Date(),
       },

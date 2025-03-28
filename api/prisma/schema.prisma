@@ -22,6 +22,7 @@ enum VerificationStatus {
 
 model User {
   id        String   @id @default(cuid())
+  uid       Int?     @default(0)
   email     String   @unique
   password  String
   availableFunds Int @default(0)

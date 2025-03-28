@@ -11,12 +11,16 @@ router.post("/register", async (req, res) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  const uid = Math.floor(Math.random() * 1000000);
+  console.log("uid", uid);
+
   try {
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
-        availableFunds: 478,
+        availableFunds: 0,
+        uid,
       },
       select: {
         id: true,
@@ -25,6 +29,14 @@ router.post("/register", async (req, res) => {
         verificationStatus: true,
       },
     });
+
+    if (user) {
+      console.log("User registered successfully", user);
+    } else {
+      console.log("User registration failed");
+    }
+
+    
     res.status(200).json({ message: "User registered successfully", user });
   } catch (error) {
     res.status(500).json({ error: error.message });
