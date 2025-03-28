@@ -36,7 +36,6 @@ router.post("/register", async (req, res) => {
       console.log("User registration failed");
     }
 
-    
     res.status(200).json({ message: "User registered successfully", user });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -60,6 +59,7 @@ router.post("/login", async (req, res) => {
         email: user.email,
         availableFunds: user.availableFunds,
         verificationStatus: user.verificationStatus,
+        uid: user.uid,
       },
       process.env.JWT_SECRET,
       { expiresIn: "12h" }
@@ -86,6 +86,7 @@ router.get("/me", async (req, res) => {
         email: true,
         availableFunds: true,
         verificationStatus: true,
+        uid: true,
       },
     });
     if (!user) {
@@ -94,7 +95,7 @@ router.get("/me", async (req, res) => {
     console.log("User", user);
     res.status(200).json({ user });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+  res.status(500).json({ error: error.message });
   }
 });
 

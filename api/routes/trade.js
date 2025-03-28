@@ -116,22 +116,52 @@ router.post("/user/openTrade", async (req, res) => {
       },
     });
 
-    // const user = await prisma.user.findUnique({
-    //   where: { id: userId },
-    // });
+    const deductedMargin = margin - handlingFee;
 
-    // const updatedUser = await prisma.user.update({
-    //   where: { id: userId },
-    //   data: {
-    //     availableFunds: user.availableFunds - margin,
-    //   },
-    // });
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
 
-    // if (updatedUser) {
-    //   console.log("User updated successfully", updatedUser);
-    // } else {
-    //   console.log("User update failed");
-    // }
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        availableFunds: user.availableFunds - deductedMargin,
+      },
+    });
+
+    if (updatedUser) {
+      console.log("User updated successfully", updatedUser);
+    } else {
+      console.log("User update failed");
+    }
+
+    const transaction = await prisma.transaction.create({
+      data: {
+        userId: userId,
+        quantity: margin,
+        type: "MARGIN",
+      },
+    });
+
+    const transaction2 = await prisma.transaction.create({
+      data: {
+        userId: userId,
+        quantity: handlingFee,
+        type: "FEE",
+      },
+    });
+
+    if (transaction) {
+      console.log("Transaction created successfully", transaction);
+    } else {
+      console.log("Transaction creation failed");
+    }
+
+    if (transaction2) {
+      console.log("Transaction created successfully", transaction2);
+    } else {
+      console.log("Transaction creation failed");
+    }
 
     if (trade) {
       console.log("Trade opened successfully", trade);
@@ -148,9 +178,9 @@ router.post("/user/openTrade", async (req, res) => {
 
 router.post("/user/closeTrade", async (req, res) => {
   try {
-    const { Id, currentPrice, profit } = req.body;
+    const { Id, currentPrice, profit, margin } = req.body;
 
-    console.log("Closing trade with:", { Id, currentPrice, profit });
+    console.log("Closing trade with:", { Id, currentPrice, profit, margin });
 
     const existingTrade = await prisma.trade.findUnique({
       where: { id: Id },
@@ -177,7 +207,7 @@ router.post("/user/closeTrade", async (req, res) => {
     const updatedUser = await prisma.user.update({
       where: { id: existingTrade.userId },
       data: {
-        availableFunds: user.availableFunds + profit,
+        availableFunds: user.availableFunds + margin + profit,
       },
     });
 
@@ -187,11 +217,42 @@ router.post("/user/closeTrade", async (req, res) => {
       console.log("User update failed");
     }
 
+    const transaction = await prisma.transaction.create({
+      data: {
+        userId: existingTrade.userId,
+        quantity: margin + profit,
+        type: "LIQUIDATION",
+      },
+    });
+
+    if (transaction) {
+      console.log("Transaction created successfully", transaction);
+    } else {
+      console.log("Transaction creation failed");
+    }
+
     console.log("Trade closed successfully", trade);
 
     res.status(200).json({ message: "Trade closed successfully", trade });
   } catch (error) {
     console.error("Error closing trade:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/user/transactionHistory", async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+
+    const transactions = await prisma.transaction.findMany({
+      where: { userId: userId },
+    });
+
+    res.status(200).json({ transactions });
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -20,6 +20,14 @@ enum VerificationStatus {
   REJECTED
 }
 
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  MARGIN
+  FEE
+  LIQUIDATION
+}
+
 model User {
   id        String   @id @default(cuid())
   uid       Int?     @default(0)
@@ -30,6 +38,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   trades Trade[]
+  transactions Transaction[]
 
 }
 
@@ -64,4 +73,12 @@ model Trade {
   status TradeStatus
 }
 
-
+model Transaction {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  quantity Float
+  type TransactionType
+}
