@@ -8,7 +8,14 @@ const axios = require("axios");
 const prisma = new PrismaClient();
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin:
+      "https://go-markets-cockpit.vercel.app, http://localhost:5173, https://go-markets-mobile.vercel.app, https://go-markets-client.vercel.app",
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 app.get("/", async (req, res) => {
