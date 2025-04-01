@@ -8,22 +8,48 @@ const axios = require("axios");
 const prisma = new PrismaClient();
 const app = express();
 
-app.use(
-  cors({
-    origin:
-      "https://go-markets-cockpit.vercel.app, http://localhost:5173, https://go-markets-mobile.vercel.app, https://go-markets-client.vercel.app",
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Content-Range", "X-Content-Range"],
-    accessControlAllowCredentials: true,
-    accessControlAllowHeaders: ["Content-Type", "Authorization"],
-    accessControlAllowMethods: ["GET,HEAD,PUT,PATCH,POST,DELETE"],
-    accessControlAllowOrigin:
-      "https://go-markets-cockpit.vercel.app, http://localhost:5173, https://go-markets-mobile.vercel.app, https://go-markets-client.vercel.app",
-  })
-);
+// Define allowed origins
+const allowedOrigins = [
+  'https://go-markets-cockpit.vercel.app',
+  'http://localhost:5173',
+  'https://go-markets-mobile.vercel.app',
+  'https://go-markets-client.vercel.app'
+];
+app.use(cors({
+  origin: function(origin, callback) {
+    // Log the origin for debugging
+    console.log('Incoming request origin:', origin);
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
+  optionsSuccessStatus: 200, // some legacy browsers choke on 204
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range']
+}));
+
+// After CORS middleware configuration, add explicit handling of OPTIONS requests for preflight
+app.options('*', cors());
+
 app.use(express.json());
+
+// Additional middleware to ensure CORS header is added to every response
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  next();
+});
 
 app.get("/", async (req, res) => {
   try {
@@ -46,7 +72,9 @@ app.use("/api/cockpit", cockpitRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ error: "Something broke!" });
+  // Ensure CORS headers are included even in error responses
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.status(500).json({ error: 'Something broke!' });
 });
 
 const PORT = process.env.PORT || 3000;
