@@ -5,38 +5,191 @@ const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userAuth = require("../middlewares/userAuth");
+const { sendVerificationEmail } = require("../utils/emailService");
+
+const generateVerificationCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+router.post("/send-verification-email", async (req, res) => {
+  const { email } = req.body;
+  try {
+    const verificationCode = generateVerificationCode();
+    const verificationCodeExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+    console.log("Sending verification email");
+    const emailSent = await sendVerificationEmail(email, verificationCode);
+    console.log("Verification email sent successfully", emailSent);
+    if (emailSent) {
+      const existingVerificationCode = await prisma.verificationCode.findUnique(
+        {
+          where: { email },
+        }
+      );
+      console.log("Existing verification code", existingVerificationCode);
+
+      if (existingVerificationCode) {
+        console.log("Deleting existing verification code");
+        await prisma.verificationCode.delete({
+          where: { id: existingVerificationCode.id },
+        });
+      }
+
+      console.log("Creating new verification code");
+      const verificationCodeRes = await prisma.verificationCode.create({
+        data: {
+          email,
+          code: verificationCode,
+          expiresAt: verificationCodeExpires,
+        },
+      });
+
+      console.log(
+        "Verification code created successfully",
+        verificationCodeRes
+      );
+
+      res.status(200).json({ message: "Verification email sent successfully" });
+    } else {
+      res.status(500).json({ error: "Failed to send verification email" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 router.post("/register", async (req, res) => {
-  const { email, password } = req.body;
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const uid = Math.floor(Math.random() * 1000000);
-  console.log("uid", uid);
+  const { email, password, verificationCode } = req.body;
 
   try {
+    console.log("Checking verification code");
+    const dbVerificationCode = await prisma.verificationCode.findUnique({
+      where: { email },
+    });
+
+    if (!dbVerificationCode) {
+      return res.status(400).json({ error: "No verification code found" });
+    }
+
+    console.log("DB verification code", dbVerificationCode);
+    if (dbVerificationCode.code !== verificationCode) {
+      console.log("Invalid verification code");
+      return res.status(400).json({ error: "Invalid verification code" });
+    }
+
+    if (new Date() > dbVerificationCode.expiresAt) {
+      console.log("Verification code expired");
+      return res.status(400).json({ error: "Verification code expired" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const uid = Math.floor(Math.random() * 1000000);
+
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         availableFunds: 0,
         uid,
+        emailVerified: true,
       },
       select: {
         id: true,
         email: true,
         availableFunds: true,
         verificationStatus: true,
+        emailVerified: true,
       },
     });
 
-    if (user) {
-      console.log("User registered successfully", user);
-    } else {
-      console.log("User registration failed");
+    console.log("User registered successfully", user);
+
+    return res.status(200).json({
+      message: "User registered successfully",
+      user,
+    });
+  } catch (error) {
+    console.error("Error registering user:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/verify-email", async (req, res) => {
+  const { email, code } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({ message: "User registered successfully", user });
+    if (user.emailVerified) {
+      return res.status(400).json({ error: "Email already verified" });
+    }
+
+    if (!user.verificationCode || !user.verificationCodeExpires) {
+      return res.status(400).json({ error: "No verification code found" });
+    }
+
+    if (new Date() > user.verificationCodeExpires) {
+      return res.status(400).json({ error: "Verification code expired" });
+    }
+
+    if (user.verificationCode !== code) {
+      return res.status(400).json({ error: "Invalid verification code" });
+    }
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        emailVerified: true,
+        verificationCode: null,
+        verificationCodeExpires: null,
+      },
+    });
+
+    res.status(200).json({ message: "Email verified successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/resend-verification", async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (user.emailVerified) {
+      return res.status(400).json({ error: "Email already verified" });
+    }
+
+    const verificationCode = generateVerificationCode();
+    const verificationCodeExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        verificationCode,
+        verificationCodeExpires,
+      },
+    });
+
+    const emailSent = await sendVerificationEmail(email, verificationCode);
+
+    res.status(200).json({
+      message: "Verification code resent successfully",
+      emailSent,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -95,7 +248,7 @@ router.get("/me", async (req, res) => {
     console.log("User", user);
     res.status(200).json({ user });
   } catch (error) {
-  res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -119,5 +272,11 @@ router.post("/real-name-verification", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+
+
+
+
+
 
 module.exports = router;

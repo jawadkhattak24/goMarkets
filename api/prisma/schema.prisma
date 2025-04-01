@@ -28,18 +28,33 @@ enum TransactionType {
   LIQUIDATION
 }
 
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BANNED
+}
+
 model User {
   id        String   @id @default(cuid())
   uid       Int?     @default(0)
   email     String   @unique
   password  String
+  status    UserStatus @default(ACTIVE)
   availableFunds Int @default(0)
   verificationStatus VerificationStatus? @default(UNVERIFIED)
+  emailVerified Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   trades Trade[]
   transactions Transaction[]
+}
 
+model VerificationCode {
+  id String @id @default(cuid())
+  email String @unique
+  code String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 enum TradeDirection {

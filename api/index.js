@@ -27,6 +27,9 @@ app.use("/api/user", userRoutes);
 const tradeRoutes = require("./routes/trade");
 app.use("/api/trade", tradeRoutes);
 
+const cockpitRoutes = require("./routes/cockpit");
+app.use("/api/cockpit", cockpitRoutes);
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: "Something broke!" });
@@ -48,7 +51,7 @@ wss.on("error", (error) => {
 });
 
 // Keep track of the last price between updates
-let globalLastClose = 2985.50;
+let globalLastClose = 2985.5;
 let globalTrend = Math.random() > 0.5 ? 1 : -1;
 let globalTrendDuration = 0;
 let globalMaxTrendDuration = Math.floor(Math.random() * 30) + 20;
@@ -57,9 +60,10 @@ let lastCandles = []; // Store recent candles to create more natural patterns
 
 async function generateRandomKlineData() {
   const now = Date.now();
-  
+
   // Natural trend changes with probability that increases over time
-  const trendChangeProbability = 0.005 + (globalTrendDuration / globalMaxTrendDuration) * 0.03;
+  const trendChangeProbability =
+    0.005 + (globalTrendDuration / globalMaxTrendDuration) * 0.03;
   if (Math.random() < trendChangeProbability) {
     globalTrend *= -1;
     globalTrendDuration = 0;
@@ -69,45 +73,69 @@ async function generateRandomKlineData() {
 
   // Calculate new candle
   const open = Number(globalLastClose.toFixed(2));
-  
+
   // Add momentum factor that builds up gradually in trend direction
   globalMomentum += globalTrend * (Math.random() * 0.00002);
   // Limit maximum momentum
   globalMomentum = Math.max(Math.min(globalMomentum, 0.0003), -0.0003);
-  
+
   // Calculate price movement with multiple factors
-  const trendFactor = globalLastClose * 0.0001 * globalTrend * (0.5 + Math.random() * 0.8);
+  const trendFactor =
+    globalLastClose * 0.0001 * globalTrend * (0.5 + Math.random() * 0.8);
   const momentumFactor = globalLastClose * globalMomentum;
-  const noiseFactor = globalLastClose * (Math.random() * 0.0002 - 0.0001) * (1 - Math.abs(globalMomentum) * 10);
-  
+  const noiseFactor =
+    globalLastClose *
+    (Math.random() * 0.0002 - 0.0001) *
+    (1 - Math.abs(globalMomentum) * 10);
+
   // Combine factors for final movement
   const movement = trendFactor + momentumFactor + noiseFactor;
   const close = Number((open + movement).toFixed(2));
 
   // Occasionally create small consolidation patterns
   const isConsolidation = Math.random() < 0.15;
-  const finalClose = isConsolidation ? 
-    Number((open + (Math.random() * 0.04 - 0.02)).toFixed(2)) : 
-    close;
+  const finalClose = isConsolidation
+    ? Number((open + (Math.random() * 0.04 - 0.02)).toFixed(2))
+    : close;
 
   // Calculate high and low with variable wick sizes
   const wickFactor = 0.05 + Math.random() * 0.15; // Variable wick sizes
   let high, low;
-  
+
   if (finalClose > open) {
     // Bullish candle
-    high = Number((finalClose + Math.abs(finalClose - open) * wickFactor * (1 + Math.random() * 0.5)).toFixed(2));
-    low = Number((open - Math.abs(finalClose - open) * wickFactor * (0.5 + Math.random() * 0.5)).toFixed(2));
+    high = Number(
+      (
+        finalClose +
+        Math.abs(finalClose - open) * wickFactor * (1 + Math.random() * 0.5)
+      ).toFixed(2)
+    );
+    low = Number(
+      (
+        open -
+        Math.abs(finalClose - open) * wickFactor * (0.5 + Math.random() * 0.5)
+      ).toFixed(2)
+    );
   } else {
     // Bearish candle
-    high = Number((open + Math.abs(finalClose - open) * wickFactor * (0.5 + Math.random() * 0.5)).toFixed(2));
-    low = Number((finalClose - Math.abs(finalClose - open) * wickFactor * (1 + Math.random() * 0.5)).toFixed(2));
+    high = Number(
+      (
+        open +
+        Math.abs(finalClose - open) * wickFactor * (0.5 + Math.random() * 0.5)
+      ).toFixed(2)
+    );
+    low = Number(
+      (
+        finalClose -
+        Math.abs(finalClose - open) * wickFactor * (1 + Math.random() * 0.5)
+      ).toFixed(2)
+    );
   }
 
   // Keep price within range but with soft boundaries
-  const rangeBottom = 2980.50;
-  const rangeTop = 2999.50;
-  
+  const rangeBottom = 2980.5;
+  const rangeTop = 2999.5;
+
   if (finalClose < rangeBottom) {
     // Stronger bounce when hitting bottom
     globalLastClose = rangeBottom + Math.random() * 0.3;
@@ -128,7 +156,7 @@ async function generateRandomKlineData() {
   }
 
   globalTrendDuration++;
-  
+
   // Store this candle for pattern analysis
   const newCandle = {
     Time: now,
@@ -136,16 +164,18 @@ async function generateRandomKlineData() {
     High: high,
     Low: low,
     Close: globalLastClose,
-    Volume: Math.floor(30000 + Math.random() * 40000 + Math.abs(globalLastClose - open) * 100000),
-    Amount: Math.floor(40000 * ((high + low) / 2))
+    Volume: Math.floor(
+      30000 + Math.random() * 40000 + Math.abs(globalLastClose - open) * 100000
+    ),
+    Amount: Math.floor(40000 * ((high + low) / 2)),
   };
-  
+
   lastCandles.push(newCandle);
   if (lastCandles.length > 10) lastCandles.shift();
 
   return {
     code: 1,
-    data: [newCandle]
+    data: [newCandle],
   };
 }
 
