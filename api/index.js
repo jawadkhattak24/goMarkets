@@ -14,6 +14,13 @@ app.use(
       "https://go-markets-cockpit.vercel.app, http://localhost:5173, https://go-markets-mobile.vercel.app, https://go-markets-client.vercel.app",
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
+    accessControlAllowCredentials: true,
+    accessControlAllowHeaders: ["Content-Type", "Authorization"],
+    accessControlAllowMethods: ["GET,HEAD,PUT,PATCH,POST,DELETE"],
+    accessControlAllowOrigin:
+      "https://go-markets-cockpit.vercel.app, http://localhost:5173, https://go-markets-mobile.vercel.app, https://go-markets-client.vercel.app",
   })
 );
 app.use(express.json());
