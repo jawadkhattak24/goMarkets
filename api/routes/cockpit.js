@@ -14,6 +14,37 @@ router.get("/users", async (req, res) => {
   }
 });
 
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid password" });
+    }
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        availableFunds: user.availableFunds,
+        verificationStatus: user.verificationStatus,
+        uid: user.uid,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "12h" }
+    );
+    return res
+      .status(200)
+      .json({ message: "User logged in successfully", user, token });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+
 router.get("/users/details/:email", async (req, res) => {
   const { email } = req.params;
 
@@ -74,6 +105,28 @@ router.post("/users/deposit", async (req, res) => {
     const user = await prisma.user.update({
       where: { email },
       data: { availableFunds: { increment: amount } },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({ user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/users/withdraw", async (req, res) => {
+  const { email, amount } = req.body;
+
+  console.log("email", email);
+  console.log("amount", amount);
+
+  try {
+    const user = await prisma.user.update({
+      where: { email },
+      data: { availableFunds: { decrement: amount } },
     });
 
     if (!user) {

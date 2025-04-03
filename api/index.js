@@ -8,45 +8,49 @@ const axios = require("axios");
 const prisma = new PrismaClient();
 const app = express();
 
-// Define allowed origins
 const allowedOrigins = [
-  'https://go-markets-cockpit.vercel.app',
-  'http://localhost:5173',
-  'https://go-markets-mobile.vercel.app',
-  'https://go-markets-client.vercel.app'
+  "https://go-markets-cockpit.vercel.app",
+  "http://localhost:5173",
+  "http://192.168.100.7:5173",
+  "https://go-markets-mobile.vercel.app",
+  "https://go-markets-client.vercel.app",
 ];
-app.use(cors({
-  origin: function(origin, callback) {
-    // Log the origin for debugging
-    console.log('Incoming request origin:', origin);
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
-      return callback(new Error('Not allowed by CORS'));
-    }
-  },
-  optionsSuccessStatus: 200, // some legacy browsers choke on 204
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range']
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      console.log("Incoming request origin:", origin);
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
+    optionsSuccessStatus: 200,
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
+  })
+);
 
-// After CORS middleware configuration, add explicit handling of OPTIONS requests for preflight
-app.options('*', cors());
+app.options("*", cors());
 
 app.use(express.json());
 
-// Additional middleware to ensure CORS header is added to every response
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET,HEAD,PUT,PATCH,POST,DELETE"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization"
+    );
+    res.setHeader("Access-Control-Allow-Credentials", "true");
   }
   next();
 });
@@ -72,9 +76,8 @@ app.use("/api/cockpit", cockpitRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  // Ensure CORS headers are included even in error responses
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.status(500).json({ error: 'Something broke!' });
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.status(500).json({ error: "Something broke!" });
 });
 
 const PORT = process.env.PORT || 3000;
@@ -92,36 +95,30 @@ wss.on("error", (error) => {
   console.error("WebSocket Server Error:", error);
 });
 
-// Keep track of the last price between updates
 let globalLastClose = 2985.5;
 let globalTrend = Math.random() > 0.5 ? 1 : -1;
 let globalTrendDuration = 0;
 let globalMaxTrendDuration = Math.floor(Math.random() * 30) + 20;
-let globalMomentum = 0; // Add momentum to create more natural movements
-let lastCandles = []; // Store recent candles to create more natural patterns
+let globalMomentum = 0;
+let lastCandles = [];
 
 async function generateRandomKlineData() {
   const now = Date.now();
 
-  // Natural trend changes with probability that increases over time
   const trendChangeProbability =
     0.005 + (globalTrendDuration / globalMaxTrendDuration) * 0.03;
   if (Math.random() < trendChangeProbability) {
     globalTrend *= -1;
     globalTrendDuration = 0;
     globalMaxTrendDuration = Math.floor(Math.random() * 30) + 20;
-    globalMomentum = 0; // Reset momentum on trend change
+    globalMomentum = 0;
   }
 
-  // Calculate new candle
   const open = Number(globalLastClose.toFixed(2));
 
-  // Add momentum factor that builds up gradually in trend direction
   globalMomentum += globalTrend * (Math.random() * 0.00002);
-  // Limit maximum momentum
   globalMomentum = Math.max(Math.min(globalMomentum, 0.0003), -0.0003);
 
-  // Calculate price movement with multiple factors
   const trendFactor =
     globalLastClose * 0.0001 * globalTrend * (0.5 + Math.random() * 0.8);
   const momentumFactor = globalLastClose * globalMomentum;
@@ -130,22 +127,18 @@ async function generateRandomKlineData() {
     (Math.random() * 0.0002 - 0.0001) *
     (1 - Math.abs(globalMomentum) * 10);
 
-  // Combine factors for final movement
   const movement = trendFactor + momentumFactor + noiseFactor;
   const close = Number((open + movement).toFixed(2));
 
-  // Occasionally create small consolidation patterns
   const isConsolidation = Math.random() < 0.15;
   const finalClose = isConsolidation
     ? Number((open + (Math.random() * 0.04 - 0.02)).toFixed(2))
     : close;
 
-  // Calculate high and low with variable wick sizes
-  const wickFactor = 0.05 + Math.random() * 0.15; // Variable wick sizes
+  const wickFactor = 0.05 + Math.random() * 0.15;
   let high, low;
 
   if (finalClose > open) {
-    // Bullish candle
     high = Number(
       (
         finalClose +
@@ -159,7 +152,6 @@ async function generateRandomKlineData() {
       ).toFixed(2)
     );
   } else {
-    // Bearish candle
     high = Number(
       (
         open +
@@ -174,32 +166,27 @@ async function generateRandomKlineData() {
     );
   }
 
-  // Keep price within range but with soft boundaries
   const rangeBottom = 2980.5;
   const rangeTop = 2999.5;
 
   if (finalClose < rangeBottom) {
-    // Stronger bounce when hitting bottom
     globalLastClose = rangeBottom + Math.random() * 0.3;
-    globalTrend = 1; // Force upward trend after hitting bottom
-    globalMomentum = 0.0001; // Add upward momentum
+    globalTrend = 1;
+    globalMomentum = 0.0001;
   } else if (finalClose > rangeTop) {
-    // Stronger drop when hitting top
     globalLastClose = rangeTop - Math.random() * 0.3;
-    globalTrend = -1; // Force downward trend after hitting top
-    globalMomentum = -0.0001; // Add downward momentum
+    globalTrend = -1;
+    globalMomentum = -0.0001;
   } else {
     globalLastClose = finalClose;
   }
 
-  // Occasionally create dojis (open ≈ close)
   if (Math.random() < 0.08) {
     globalLastClose = Number((open + (Math.random() * 0.02 - 0.01)).toFixed(2));
   }
 
   globalTrendDuration++;
 
-  // Store this candle for pattern analysis
   const newCandle = {
     Time: now,
     Open: open,
@@ -221,16 +208,13 @@ async function generateRandomKlineData() {
   };
 }
 
-// Update WebSocket connection handler to send data more frequently
 wss.on("connection", async (ws, req) => {
   console.log("New WebSocket client connected");
   let intervalId;
 
-  // Send initial data
   const initialData = await generateRandomKlineData();
   ws.send(JSON.stringify(initialData));
 
-  // Send updates every second
   intervalId = setInterval(async () => {
     if (ws.readyState === WebSocket.OPEN) {
       const data = await generateRandomKlineData();
