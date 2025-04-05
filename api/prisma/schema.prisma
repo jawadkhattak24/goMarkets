@@ -86,6 +86,7 @@ model Trade {
   openTime DateTime?
   closeTime DateTime?
   status TradeStatus
+  leverage Float?
 }
 
 model Transaction {
@@ -97,3 +98,30 @@ model Transaction {
   quantity Float
   type TransactionType
 }
+
+model MarketData {
+  id        String   @id @default(cuid())
+  symbol    String   // e.g., "XAUUSD"
+  time      DateTime
+  open      Float
+  high      Float
+  low       Float
+  close     Float
+  volume    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([symbol, time])
+  @@index([symbol, time])
+}
+
+// Create a model to track last update time for each symbol
+model MarketDataUpdate {
+  symbol    String   @id
+  lastUpdate DateTime
+  nextUpdate DateTime
+}
+
+
+
+

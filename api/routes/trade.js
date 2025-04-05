@@ -113,6 +113,7 @@ router.post("/user/openTrade", async (req, res) => {
         profit: profit,
         openTime: new Date(),
         closeTime: null,
+        leverage: leverage,
       },
     });
 

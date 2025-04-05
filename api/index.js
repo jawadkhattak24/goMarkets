@@ -4,6 +4,7 @@ require("dotenv").config();
 const { PrismaClient } = require("@prisma/client");
 const WebSocket = require("ws");
 const axios = require("axios");
+const marketDataService = require("./services/marketDataService");
 
 const prisma = new PrismaClient();
 const app = express();
@@ -11,7 +12,7 @@ const app = express();
 const allowedOrigins = [
   "https://go-markets-cockpit.vercel.app",
   "http://localhost:5173",
-  "http://192.168.100.7:5173",
+  "http://192.168.100.3:5173",
   "https://go-markets-mobile.vercel.app",
   "https://go-markets-client.vercel.app",
 ];
@@ -35,21 +36,14 @@ app.use(
 );
 
 app.options("*", cors());
-
 app.use(express.json());
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader(
-      "Access-Control-Allow-Methods",
-      "GET,HEAD,PUT,PATCH,POST,DELETE"
-    );
-    res.setHeader(
-      "Access-Control-Allow-Headers",
-      "Content-Type, Authorization"
-    );
+    res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     res.setHeader("Access-Control-Allow-Credentials", "true");
   }
   next();
@@ -91,150 +85,92 @@ const wss = new WebSocket.Server({
   clientTracking: true,
 });
 
-wss.on("error", (error) => {
-  console.error("WebSocket Server Error:", error);
+const clients = new Map();
+
+const supportedSymbols = {
+  'XAUUSD': 2000 
+};
+
+Object.entries(supportedSymbols).forEach(([symbol, basePrice]) => {
+  marketDataService.initializeSymbol(symbol, basePrice)
+    .then(() => console.log(`Initialized ${symbol} with base price ${basePrice}`))
+    .catch(error => console.error(`Failed to initialize ${symbol}:`, error));
 });
 
-let globalLastClose = 2985.5;
-let globalTrend = Math.random() > 0.5 ? 1 : -1;
-let globalTrendDuration = 0;
-let globalMaxTrendDuration = Math.floor(Math.random() * 30) + 20;
-let globalMomentum = 0;
-let lastCandles = [];
-
-async function generateRandomKlineData() {
-  const now = Date.now();
-
-  const trendChangeProbability =
-    0.005 + (globalTrendDuration / globalMaxTrendDuration) * 0.03;
-  if (Math.random() < trendChangeProbability) {
-    globalTrend *= -1;
-    globalTrendDuration = 0;
-    globalMaxTrendDuration = Math.floor(Math.random() * 30) + 20;
-    globalMomentum = 0;
-  }
-
-  const open = Number(globalLastClose.toFixed(2));
-
-  globalMomentum += globalTrend * (Math.random() * 0.00002);
-  globalMomentum = Math.max(Math.min(globalMomentum, 0.0003), -0.0003);
-
-  const trendFactor =
-    globalLastClose * 0.0001 * globalTrend * (0.5 + Math.random() * 0.8);
-  const momentumFactor = globalLastClose * globalMomentum;
-  const noiseFactor =
-    globalLastClose *
-    (Math.random() * 0.0002 - 0.0001) *
-    (1 - Math.abs(globalMomentum) * 10);
-
-  const movement = trendFactor + momentumFactor + noiseFactor;
-  const close = Number((open + movement).toFixed(2));
-
-  const isConsolidation = Math.random() < 0.15;
-  const finalClose = isConsolidation
-    ? Number((open + (Math.random() * 0.04 - 0.02)).toFixed(2))
-    : close;
-
-  const wickFactor = 0.05 + Math.random() * 0.15;
-  let high, low;
-
-  if (finalClose > open) {
-    high = Number(
-      (
-        finalClose +
-        Math.abs(finalClose - open) * wickFactor * (1 + Math.random() * 0.5)
-      ).toFixed(2)
-    );
-    low = Number(
-      (
-        open -
-        Math.abs(finalClose - open) * wickFactor * (0.5 + Math.random() * 0.5)
-      ).toFixed(2)
-    );
-  } else {
-    high = Number(
-      (
-        open +
-        Math.abs(finalClose - open) * wickFactor * (0.5 + Math.random() * 0.5)
-      ).toFixed(2)
-    );
-    low = Number(
-      (
-        finalClose -
-        Math.abs(finalClose - open) * wickFactor * (1 + Math.random() * 0.5)
-      ).toFixed(2)
-    );
-  }
-
-  const rangeBottom = 2980.5;
-  const rangeTop = 2999.5;
-
-  if (finalClose < rangeBottom) {
-    globalLastClose = rangeBottom + Math.random() * 0.3;
-    globalTrend = 1;
-    globalMomentum = 0.0001;
-  } else if (finalClose > rangeTop) {
-    globalLastClose = rangeTop - Math.random() * 0.3;
-    globalTrend = -1;
-    globalMomentum = -0.0001;
-  } else {
-    globalLastClose = finalClose;
-  }
-
-  if (Math.random() < 0.08) {
-    globalLastClose = Number((open + (Math.random() * 0.02 - 0.01)).toFixed(2));
-  }
-
-  globalTrendDuration++;
-
-  const newCandle = {
-    Time: now,
-    Open: open,
-    High: high,
-    Low: low,
-    Close: globalLastClose,
-    Volume: Math.floor(
-      30000 + Math.random() * 40000 + Math.abs(globalLastClose - open) * 100000
-    ),
-    Amount: Math.floor(40000 * ((high + low) / 2)),
-  };
-
-  lastCandles.push(newCandle);
-  if (lastCandles.length > 10) lastCandles.shift();
-
-  return {
-    code: 1,
-    data: [newCandle],
-  };
-}
-
 wss.on("connection", async (ws, req) => {
-  console.log("New WebSocket client connected");
-  let intervalId;
+  console.log("New WebSocket client connected from:", req.socket.remoteAddress);
+  
+  const clientData = {
+    ws,
+    symbol: 'XAUUSD',
+    streamInterval: null
+  };
+  clients.set(ws, clientData);
 
-  const initialData = await generateRandomKlineData();
-  ws.send(JSON.stringify(initialData));
+  try {
+    const initialData = await marketDataService.getAllCandles(clientData.symbol);
+    ws.send(JSON.stringify({
+      type: 'initial',
+      data: initialData
+    }));
 
-  intervalId = setInterval(async () => {
-    if (ws.readyState === WebSocket.OPEN) {
-      const data = await generateRandomKlineData();
-      ws.send(JSON.stringify(data));
-    }
-  }, 10000);
+    clientData.streamInterval = setInterval(async () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        try {
+          const nextCandle = await marketDataService.getNextCandle(clientData.symbol);
+          ws.send(JSON.stringify({
+            type: 'update',
+            data: nextCandle
+          }));
+        } catch (error) {
+          console.error('Error streaming candle:', error);
+        }
+      }
+    }, 1000);
 
-  ws.on("close", () => {
-    clearInterval(intervalId);
-  });
+    ws.on("close", () => {
+      if (clientData.streamInterval) {
+        clearInterval(clientData.streamInterval);
+      }
+      clients.delete(ws);
+      console.log("Client disconnected");
+    });
 
-  ws.on("error", (error) => {
-    console.error("WebSocket error:", error);
-    clearInterval(intervalId);
-  });
+    ws.on("error", (error) => {
+      console.error("WebSocket error:", error);
+      if (clientData.streamInterval) {
+        clearInterval(clientData.streamInterval);
+      }
+      clients.delete(ws);
+    });
+
+  } catch (error) {
+    console.error("Error setting up client connection:", error);
+    ws.close();
+  }
+});
+
+process.on('SIGINT', async () => {
+  console.log('Shutting down...');
+  for (const symbol of Object.keys(supportedSymbols)) {
+    await marketDataService.stopDataGeneration(symbol);
+  }
+  process.exit(0);
 });
 
 app.get("/ws-test", (req, res) => {
   res.json({
     status: "WebSocket server running",
     wsClients: wss.clients.size,
+    serverTime: new Date().toISOString(),
+    wsServerStatus: wss.readyState,
   });
+});
+
+wss.on('error', (error) => {
+    console.error('WebSocket server error:', error);
+});
+
+wss.on('listening', () => {
+    console.log('WebSocket server is listening');
 });

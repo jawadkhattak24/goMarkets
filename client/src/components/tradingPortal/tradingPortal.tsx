@@ -214,8 +214,6 @@ class CustomDatafeed {
     }
 
     subscribe(symbol: SymbolInfo, period: Period, callback: DatafeedSubscribeCallback): void {
-        let lastProcessedTime = 0;
-
         const setupWebSocket = () => {
             try {
                 console.log('Setting up WebSocket connection...');
@@ -226,56 +224,63 @@ class CustomDatafeed {
                     this._ws = null;
                 }
 
-                // this._ws = new WebSocket('wss://api.gomktsglb.cc/v1/ws');
-                // this._ws = new WebSocket('ws://localhost:3000/ws');
-                this._ws = new WebSocket('wss://api.spreedex.cc/v1/ws');
-
-                // Add connection state logging
-                console.log('WebSocket current state:', this._ws.readyState);
+                this._ws = new WebSocket('ws://192.168.100.4:3000/ws');
 
                 this._ws.onopen = () => {
-                    console.log('WebSocket connected for live data from subscribe, readyState:', this._ws?.readyState);
+                    console.log('WebSocket connected successfully');
                 };
 
                 this._ws.onmessage = (event) => {
-                    console.log('Received message, readyState:', this._ws?.readyState);
-                    const result = JSON.parse(event.data);
-
-                    console.log("Data from server", result);
-
-                    if (result && result.code === 1 && Array.isArray(result.data)) {
-                        const newData = result.data
-                            .filter((item: KLineData) => item.Time > lastProcessedTime)
-                            .sort((a: KLineData, b: KLineData) => a.Time - b.Time);
-
-                        if (newData.length > 0) {
-                            lastProcessedTime = newData[newData.length - 1].Time;
-                            const latestPoint = newData[newData.length - 1];
+                    try {
+                        const message = JSON.parse(event.data);
+                        
+                        if (message.type === 'initial') {
+                            console.log('Received initial data with', message.data.length, 'candles');
+                            // Handle initial data if needed
+                            if (message.data.length > 0) {
+                                const latestCandle = message.data[message.data.length - 1];
+                                callback({
+                                    timestamp: latestCandle.time,
+                                    open: latestCandle.open,
+                                    high: latestCandle.high,
+                                    low: latestCandle.low,
+                                    close: latestCandle.close,
+                                    volume: 0, 
+                                    turnover: 0 
+                                });
+                            }
+                        } else if (message.type === 'update') {
+                            const update = message.data;
                             callback({
-                                timestamp: latestPoint.Time,
-                                open: latestPoint.Open,
-                                high: latestPoint.High,
-                                low: latestPoint.Low,
-                                close: latestPoint.Close,
-                                volume: latestPoint.Volume,
-                                turnover: latestPoint.Amount
+                                timestamp: update.time,
+                                open: update.open,
+                                high: update.high,
+                                low: update.low,
+                                close: update.close,
+                                volume: 0, 
+                                turnover: 0 
                             });
                         }
+                    } catch (error) {
+                        console.error('Error processing WebSocket message:', error);
                     }
                 };
 
                 this._ws.onerror = (error) => {
                     console.error('WebSocket error:', error);
-                    console.error('WebSocket error state:', this._ws?.readyState);
                 };
 
                 this._ws.onclose = (event) => {
                     console.log('WebSocket disconnected', {
                         code: event.code,
                         reason: event.reason,
-                        wasClean: event.wasClean,
-                        readyState: this._ws?.readyState
+                        wasClean: event.wasClean
                     });
+                    
+                    setTimeout(() => {
+                        console.log('Attempting to reconnect...');
+                        setupWebSocket();
+                    }, 5000);
                 };
 
             } catch (error) {
@@ -283,7 +288,6 @@ class CustomDatafeed {
             }
         };
 
-        // Only set up new WebSocket if we're changing markets or don't have a connection
         if (this._prevSymbolMarket !== symbol.market || !this._ws || this._ws.readyState !== WebSocket.OPEN) {
             setupWebSocket();
         }
