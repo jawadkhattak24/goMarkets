@@ -5,6 +5,7 @@ const { PrismaClient } = require("@prisma/client");
 const WebSocket = require("ws");
 const axios = require("axios");
 const marketDataService = require("./services/marketDataService");
+const tradePositionService = require("./services/tradePositionService");
 
 const prisma = new PrismaClient();
 const app = express();
@@ -12,7 +13,7 @@ const app = express();
 const allowedOrigins = [
   "https://go-markets-cockpit.vercel.app",
   "http://localhost:5173",
-  "http://192.168.100.3:5173",
+  "http://192.168.100.4:5173",
   "https://go-markets-mobile.vercel.app",
   "https://go-markets-client.vercel.app",
 ];
@@ -42,8 +43,14 @@ app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET,HEAD,PUT,PATCH,POST,DELETE"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization"
+    );
     res.setHeader("Access-Control-Allow-Credentials", "true");
   }
   next();
@@ -61,6 +68,9 @@ app.get("/", async (req, res) => {
 
 const userRoutes = require("./routes/user");
 app.use("/api/user", userRoutes);
+
+
+
 
 const tradeRoutes = require("./routes/trade");
 app.use("/api/trade", tradeRoutes);
@@ -88,50 +98,94 @@ const wss = new WebSocket.Server({
 const clients = new Map();
 
 const supportedSymbols = {
-  'XAUUSD': 2000 
+  XAUUSD: 2000,
 };
 
 Object.entries(supportedSymbols).forEach(([symbol, basePrice]) => {
-  marketDataService.initializeSymbol(symbol, basePrice)
-    .then(() => console.log(`Initialized ${symbol} with base price ${basePrice}`))
-    .catch(error => console.error(`Failed to initialize ${symbol}:`, error));
+  // marketDataService
+  //   .initializeSymbol(symbol, basePrice)
+  //   .then(() =>
+  //     console.log(`Initialized ${symbol} with base price ${basePrice}`)
+  //   )
+  //   .catch((error) => console.error(`Failed to initialize ${symbol}:`, error));
 });
 
 wss.on("connection", async (ws, req) => {
   console.log("New WebSocket client connected from:", req.socket.remoteAddress);
-  
+
   const clientData = {
     ws,
-    symbol: 'XAUUSD',
-    streamInterval: null
+    symbol: "XAUUSD",
+    streamInterval: null,
+    userId: null,
   };
   clients.set(ws, clientData);
 
   try {
-    const initialData = await marketDataService.getAllCandles(clientData.symbol);
-    ws.send(JSON.stringify({
-      type: 'initial',
-      data: initialData
-    }));
+    // const initialData = await marketDataService.getAllCandles(
+    //   clientData.symbol
+    // );
+    // ws.send(
+    //   JSON.stringify({
+    //     type: "initial",
+    //     data: initialData,
+    //   })
+    // );
 
-    clientData.streamInterval = setInterval(async () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        try {
-          const nextCandle = await marketDataService.getNextCandle(clientData.symbol);
-          ws.send(JSON.stringify({
-            type: 'update',
-            data: nextCandle
-          }));
-        } catch (error) {
-          console.error('Error streaming candle:', error);
+    // clientData.streamInterval = setInterval(async () => {
+    //   if (ws.readyState === WebSocket.OPEN) {
+    //     try {
+    //       const nextCandle = await marketDataService.getNextCandle(
+    //         clientData.symbol
+    //       );
+    //       ws.send(
+    //         JSON.stringify({
+    //           type: "update",
+    //           data: nextCandle,
+    //         })
+    //       );
+    //       console.log("Sent candle:", nextCandle);
+    //     } catch (error) {
+    //       console.error("Error streaming candle:", error);
+    //     }
+    //   }
+    // }, 1000);
+
+    ws.on("message", async (message) => {
+      try {
+        const data = JSON.parse(message);
+
+        if (data.type === "subscribe_positions") {
+          const userId = data.userId;
+          clientData.userId = userId;
+
+          await tradePositionService.initializeUserPositions(userId, ws);
+
+          tradePositionService.startPositionUpdates(userId, (positions) => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(
+                JSON.stringify({
+                  type: "position_update",
+                  data: positions,
+                })
+              );
+            }
+          });
         }
+      } catch (error) {
+        console.error("Error processing WebSocket message:", error);
       }
-    }, 1000);
+    });
 
     ws.on("close", () => {
       if (clientData.streamInterval) {
         clearInterval(clientData.streamInterval);
       }
+
+      if (clientData.userId) {
+        tradePositionService.removeUserConnection(clientData.userId, ws);
+      }
+
       clients.delete(ws);
       console.log("Client disconnected");
     });
@@ -141,20 +195,25 @@ wss.on("connection", async (ws, req) => {
       if (clientData.streamInterval) {
         clearInterval(clientData.streamInterval);
       }
+
+      if (clientData.userId) {
+        tradePositionService.removeUserConnection(clientData.userId, ws);
+      }
+
       clients.delete(ws);
     });
-
   } catch (error) {
     console.error("Error setting up client connection:", error);
     ws.close();
   }
 });
 
-process.on('SIGINT', async () => {
-  console.log('Shutting down...');
-  for (const symbol of Object.keys(supportedSymbols)) {
-    await marketDataService.stopDataGeneration(symbol);
-  }
+process.on("SIGINT", async () => {
+  console.log("Shutting down...");
+  // for (const symbol of Object.keys(supportedSymbols)) {
+  //   await marketDataService.stopDataGeneration(symbol);
+  // }
+  tradePositionService.cleanup();
   process.exit(0);
 });
 
@@ -167,10 +226,10 @@ app.get("/ws-test", (req, res) => {
   });
 });
 
-wss.on('error', (error) => {
-    console.error('WebSocket server error:', error);
+wss.on("error", (error) => {
+  console.error("WebSocket server error:", error);
 });
 
-wss.on('listening', () => {
-    console.log('WebSocket server is listening');
+wss.on("listening", () => {
+  console.log("WebSocket server is listening");
 });

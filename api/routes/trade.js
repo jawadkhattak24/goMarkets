@@ -3,6 +3,7 @@ const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
+const tradePositionService = require("../services/tradePositionService");
 
 router.get("/user/positionHolding", async (req, res) => {
   try {
@@ -32,6 +33,7 @@ router.get("/user/positionHolding", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 router.get("/user/tradeHistory", async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
@@ -170,6 +172,8 @@ router.post("/user/openTrade", async (req, res) => {
       console.log("Trade opening failed");
     }
 
+    await tradePositionService.addNewPosition(userId, trade);
+
     res.status(201).json({ message: "Trade opened successfully", trade });
   } catch (error) {
     console.error("Error opening trade:", error);
@@ -232,11 +236,38 @@ router.post("/user/closeTrade", async (req, res) => {
       console.log("Transaction creation failed");
     }
 
+    await tradePositionService.updatePositionStatus(
+      existingTrade.userId,
+      Id,
+      "CLOSED"
+    );
+
     console.log("Trade closed successfully", trade);
 
     res.status(200).json({ message: "Trade closed successfully", trade });
   } catch (error) {
     console.error("Error closing trade:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/pair/details/:id", async (req, res) => {
+  const { id } = req.params;
+
+  console.log("id", id);
+
+  try {
+    const pair = await prisma.pair.findUnique({
+      where: { id: id },
+    });
+
+    if (!pair) {
+      return res.status(404).json({ error: "Pair not found" });
+    }
+
+    res.status(200).json({ pair });
+  } catch (error) {
+    console.error("Error fetching pair details:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -1,4 +1,391 @@
-<div class="wallet-list px-20">
+<!-- import { createChart, ColorType, Time, IChartApi, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
+import { useEffect, useRef, useState, useContext } from 'react';
+import styles from './styles/klineChart.module.scss';
+import SidebarWatchList from '../sidebarWatchList/sidebarWatchList';
+import TradeContext from '../../context/tradeContext';
+import { BsFillTriangleFill } from "react-icons/bs";
+
+// Updated interface to include optional volume, matching WS data format
+// Remove unused interface
+// interface CandleData {
+//     time: UTCTimestamp; // Use UTCTimestamp for clarity (it's just number)
+//     open: number;
+//     high: number;
+//     low: number;
+//     close: number;
+//     volume?: number; // Volume is optional based on your WS data structure
+// }
+
+interface KLineChartProps {
+    currentPrice: number;
+    setCurrentPrice: (price: number) => void;
+    selectedPair: {
+        symbol: string;
+        price: number;
+    };
+}
+
+// Define the WebSocket URL
+const WEBSOCKET_URL = 'ws://localhost:3000/ws'; // Corrected URL scheme
+
+export const KLineChart = ({ currentPrice, setCurrentPrice, selectedPair }: KLineChartProps) => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const { selectedPair: contextSelectedPair } = useContext(TradeContext);
+
+    // Use the pair from context if available, otherwise use the prop
+    const activePair = contextSelectedPair.symbol ? contextSelectedPair : selectedPair;
+
+    // Set current price based on the active pair whenever it changes
+    useEffect(() => {
+        console.log("KLineChart: activePair changed", activePair);
+        // Only update if the activePair has a valid price
+        if (activePair && typeof activePair.price === 'number') {
+             setCurrentPrice(activePair.price);
+        }
+    }, [activePair, setCurrentPrice]);
+
+    const colors = {
+        backgroundColor: 'white',
+        lineColor: '#2962FF',
+        textColor: 'black',
+        upColor: '#0166fc',
+        downColor: '#f23c48',
+    };
+
+    const chartContainerRef = useRef<HTMLDivElement>(null);
+    // Use MutableRefObject for refs holding mutable objects like chart/series/ws
+    const chartRef = useRef<IChartApi | null>(null);
+    const candlestickSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+    const wsRef = useRef<WebSocket | null>(null); // Ref to hold the WebSocket instance
+    const lastTimestampRef = useRef<UTCTimestamp | null>(null); // Ref to store the last updated timestamp
+
+    // State for chart dimensions
+    const [dimensions, setDimensions] = useState({
+        width: window.innerWidth,
+        height: window.innerHeight * 0.3
+    });
+
+    // Main effect for chart initialization, WebSocket connection, and cleanup
+    useEffect(() => {
+        if (!chartContainerRef.current || !activePair.symbol) {
+             console.log("Chart container or active pair symbol not ready.");
+             return; // Exit if container isn't ready or no symbol selected
+        }
+
+        console.log(`Initializing chart for symbol: ${activePair.symbol}`);
+
+        // --- Chart and Series Initialization ---
+        const handleResize = () => {
+            const newWidth = window.innerWidth;
+            const newHeight = window.innerHeight * 0.3;
+            setDimensions({ width: newWidth, height: newHeight});
+            if (chartRef.current) {
+                console.log(`Resizing chart to ${newWidth}x${newHeight}`);
+                chartRef.current.applyOptions({
+                    width: newWidth,
+                    height: newHeight,
+                });
+            }
+        };
+
+        // Create the chart instance
+        chartRef.current = createChart(chartContainerRef.current, {
+            layout: {
+                background: { type: ColorType.Solid, color: colors.backgroundColor },
+                textColor: colors.textColor,
+                fontSize: 12,
+            },
+            width: dimensions.width,
+            height: dimensions.height,
+            grid: {
+                vertLines: { visible: true, color: 'rgba(240, 243, 250, 0.8)' },
+                horzLines: { visible: true, color: 'rgba(240, 243, 250, 0.8)' }
+            },
+            crosshair: {
+                vertLine: { width: 4, color: 'rgba(224, 227, 235, 0.1)', style: 1 },
+                horzLine: { visible: true, labelVisible: true },
+            },
+            rightPriceScale: {
+                borderVisible: false,
+                scaleMargins: { top: 0.1, bottom: 0.1 },
+            },
+            timeScale: {
+                borderVisible: false,
+                timeVisible: true,
+                secondsVisible: false, // Adjust if your data is more granular
+                 tickMarkFormatter: (time: UTCTimestamp) => {
+                     const date = new Date(time * 1000);
+                     // Example: Format as HH:MM
+                     return date.getHours().toString().padStart(2, '0') + ':' +
+                            date.getMinutes().toString().padStart(2, '0');
+                 },
+            },
+            handleScroll: {
+                mouseWheel: false, // Keep existing scroll/scale options
+                pressedMouseMove: true,
+                horzTouchDrag: true,
+                vertTouchDrag: true
+            },
+            handleScale: {
+                axisPressedMouseMove: false,
+                mouseWheel: false,
+                pinch: true,
+            },
+        });
+
+        // Add the candlestick series
+        candlestickSeriesRef.current = chartRef.current.addCandlestickSeries({
+            upColor: colors.upColor,
+            wickUpColor: colors.upColor,
+            downColor: colors.downColor,
+            wickDownColor: colors.downColor,
+            borderVisible: false,
+            // Keep price line options if needed
+            // priceLineVisible: true,
+            // priceLineWidth: 1,
+            // priceLineColor: colors.lineColor,
+        });
+
+        // --- Fetch Initial Data (Placeholder - Implement if needed) ---
+        // TODO: Implement fetching initial historical data for the activePair.symbol
+        // Example: fetch(`/api/history?symbol=${activePair.symbol}&limit=200`)
+        //           .then(res => res.json())
+        //           .then(initialData => {
+        //                if (candlestickSeriesRef.current && initialData?.length > 0) {
+        //                    candlestickSeriesRef.current.setData(initialData);
+        //                    // Optionally set initial price from historical data
+        //                    setCurrentPrice(initialData[initialData.length - 1].close);
+        //                    chartRef.current?.timeScale().fitContent(); // Adjust view after loading data
+        //                }
+        //           })
+        //           .catch(error => console.error("Failed to fetch initial data:", error));
+
+
+        //5.0.3
+
+
+        // For now, set empty data initially or use cached data if available
+        candlestickSeriesRef.current.setData([]); // Start with an empty chart until WS connects/sends data
+        console.log("Candlestick series added. Waiting for data...");
+
+
+        // --- WebSocket Connection ---
+        console.log(`Attempting to connect to WebSocket: ${WEBSOCKET_URL}`);
+        // Close existing connection if switching symbols
+        if (wsRef.current) {
+            console.log("Closing previous WebSocket connection.");
+            wsRef.current.close();
+        }
+
+        // Create new WebSocket connection
+        wsRef.current = new WebSocket(WEBSOCKET_URL);
+
+        wsRef.current.onopen = () => {
+            console.log('WebSocket Connected');
+            // IMPORTANT: Send a subscription message if your server requires it
+            // Example: wsRef.current?.send(JSON.stringify({ action: 'subscribe', symbol: activePair.symbol }));
+            console.log(`Subscribing to symbol: ${activePair.symbol}`); // Assuming implicit subscription or sent above
+        };
+
+        wsRef.current.onmessage = (event) => {
+            try {
+                const message = JSON.parse(event.data);
+                // console.log("Received WS message:", message); // Optional: log the raw parsed message
+
+                if (!message || typeof message !== 'object') {
+                     console.warn('Received non-object message from WebSocket:', event.data);
+                     return;
+                }
+
+                const { type, data } = message;
+                const series = candlestickSeriesRef.current;
+
+                if (!series) {
+                    console.warn("Candlestick series not available yet.");
+                    return;
+                }
+
+                if (type === 'initial' && Array.isArray(data)) {
+                    console.log(`Received initial data with ${data.length} candles.`);
+                    // Validate the first candle in the array as a sample
+                    // if (data.length > 0 && typeof data[0].time === 'number' && typeof data[0].open === 'number') {
+                    //     // Assume initial data timestamps are already start-of-minute
+                    //     // Ensure data is sorted by time just in case
+                    //     data.sort((a, b) => a.time - b.time);
+                    //     series.setData(data);
+                    //     // Store the start-of-minute timestamp of the last initial candle
+                    //     lastTimestampRef.current = data[data.length - 1].time;
+                    //     console.log("Initial data loaded. Last timestamp (start of minute):", lastTimestampRef.current);
+                    //     // Optionally update current price from the last initial candle
+                    //     if (data.length > 0) {
+                    //         setCurrentPrice(data[data.length - 1].close);
+                    //     }
+                    //      // chartRef.current?.timeScale().fitContent(); // Adjust view after loading initial data
+                    // } else {
+                    //      console.warn('Invalid format in initial candle data array:', data.length > 0 ? data[0] : 'empty array');
+                    // }
+                } else if (type === 'update' && data && typeof data.time === 'number' && typeof data.open === 'number') {
+                    // Calculate the timestamp for the start of the minute
+                    const minuteStartTime = Math.floor(data.time / 60) * 60 as UTCTimestamp;
+
+                    // Prepare the data for update/append - use the minute timestamp
+                    const candleUpdateData = {
+                        time: minuteStartTime,
+                        open: data.open, // This might not be strictly correct if it's not the first tick of the minute
+                        high: data.high,
+                        low: data.low,
+                        close: data.close,
+                        volume: data.volume, // Make sure volume is handled correctly if needed
+                    };
+
+                    // *** Check timestamp (using minute start time) ***
+                    if (lastTimestampRef.current !== null && minuteStartTime < lastTimestampRef.current) {
+                        console.warn(
+                            'Skipping update: incoming data minute older than last candle minute.',
+                            { lastMinuteStart: lastTimestampRef.current, newMinuteStart: minuteStartTime, originalTime: data.time }
+                        );
+                        return; // Skip this update
+                    }
+
+                    // If the new data is for a future minute but not the *next* minute, log a gap.
+                    if (lastTimestampRef.current !== null && minuteStartTime > lastTimestampRef.current + 60) {
+                        console.log("Time gap detected between candles", { lastMinuteStart: lastTimestampRef.current, newMinuteStart: minuteStartTime });
+                        // lightweight-charts will handle the gap visually.
+                    }
+
+                    // console.log('Updating/Appending candle for minute:', minuteStartTime, candleUpdateData); // Optional: log updates
+                    series.update(candleUpdateData);
+                    lastTimestampRef.current = minuteStartTime; // Update the last timestamp (start of minute)
+                    setCurrentPrice(data.close); // Update current price display with the latest tick
+                } else {
+                    // Log specific details about the invalid format
+                    console.warn(
+                        'Received invalid or unexpected data format via WebSocket:',
+                        {
+                            rawData: event.data,
+                            parsedType: type,
+                            parsedData: data,
+                            isDataValidObject: !!data && typeof data === 'object',
+                            expectedType: type === 'initial' ? 'Array' : (type === 'update' ? 'Object with time/open' : 'unknown'),
+                            actualDataType: Array.isArray(data) ? 'Array' : typeof data,
+                        }
+                    );
+                }
+            } catch (error) {
+                console.error('Failed to parse WebSocket message or update chart:', error, event.data);
+            }
+        };
+
+        wsRef.current.onerror = (error) => {
+            console.error('WebSocket Error:', error);
+            // TODO: Implement reconnection logic if desired
+        };
+
+        wsRef.current.onclose = (event) => {
+            console.log('WebSocket Disconnected.', `Code: ${event.code}, Reason: ${event.reason}`);
+            // Clear the ref if connection is closed permanently or before reconnect attempt
+            // wsRef.current = null;
+        };
+
+        // --- Event Listeners and Cleanup ---
+        window.addEventListener('resize', handleResize);
+
+        // Cleanup function: runs when component unmounts or dependencies change
+        return () => {
+            console.log(`Cleaning up chart and WebSocket for symbol: ${activePair.symbol}`);
+            window.removeEventListener('resize', handleResize);
+
+            // Close WebSocket connection
+            if (wsRef.current) {
+                console.log("Closing WebSocket connection during cleanup.");
+                wsRef.current.onclose = null; // Prevent onclose handler from firing during manual close
+                wsRef.current.close();
+                wsRef.current = null;
+            }
+            lastTimestampRef.current = null; // Reset last timestamp on cleanup
+
+            // Remove the chart instance
+            if (chartRef.current) {
+                console.log("Removing chart instance during cleanup.");
+                chartRef.current.remove();
+                chartRef.current = null;
+            }
+            // Clear refs
+             candlestickSeriesRef.current = null;
+        };
+
+    // Dependencies for the useEffect hook
+    // Re-run the effect if the symbol changes, dimensions change (for initial setup), or setCurrentPrice function identity changes (less likely)
+    }, [activePair.symbol, dimensions.width, dimensions.height, setCurrentPrice]); // Added activePair.symbol
+
+    return (
+        <div className={styles.chartWrapper}>
+            {/* Sidebar logic remains the same */}
+            {isSidebarOpen &&
+                <>
+                    <div
+                        className={`${styles.overlay} ${isSidebarOpen ? styles.open : ''}`}
+                        onClick={() => setIsSidebarOpen(false)}
+                    />
+                    <div className={`${styles.sidebar} ${isSidebarOpen ? styles.open : ''}`}>
+                        <SidebarWatchList
+                            onSymbolSelect={(symbol) => {
+                                console.log("KLineChart: Symbol selected from sidebar:", symbol);
+                                setIsSidebarOpen(false);
+                                // Context update should trigger activePair change and useEffect re-run
+                            }}
+                            setIsSidebarOpen={setIsSidebarOpen}
+                            setSelectedPairPrice={setCurrentPrice} // This might be redundant if context handles price updates
+                        />
+                    </div>
+                </>
+            }
+            {/* Symbol Info Display remains the same */}
+            <div className={styles.symbolInfoContainer}>
+                <p
+                    className={styles.symbolName}
+                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                >
+                    {activePair.symbol ? activePair.symbol : "Select Symbol"} {/* Added fallback text */}
+                    <BsFillTriangleFill className={styles.triangleIcon} />
+                </p>
+                <div className={styles.symbolPriceContainer}>
+                    {/* Display the current price from state */}
+                    <p className={styles.symbolPrice}>{currentPrice ? currentPrice.toFixed(2) : "0.00"}</p>
+                </div>
+            </div>
+            {/* Chart Container */}
+            <div className={styles.chartContainer} ref={chartContainerRef} />
+        </div>
+    );
+};
+
+export default KLineChart; -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- <div class="wallet-list px-20">
   <div class="py-10">
     <div class="font-bold text-main-black">Balance</div>
     <div class="font-extrabold text-primary text-16">0</div>
@@ -29,4 +416,4 @@
       </div>
     </div>
   </div>
-</div>
+</div> -->

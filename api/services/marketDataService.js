@@ -4,11 +4,11 @@ const prisma = new PrismaClient();
 class MarketDataService {
     constructor() {
         this.dataCache = new Map();
-        this.currentIndex = new Map(); // Track current streaming position for each symbol
+        this.currentIndex = new Map(); 
     }
 
     generateHourData(baseValue) {
-        const SECONDS_IN_HOUR = 3600; // 60 * 60
+        const SECONDS_IN_HOUR = 3600;
         const date = new Date();
         date.setSeconds(0);
         date.setMilliseconds(0);
@@ -33,7 +33,7 @@ class MarketDataService {
                 high: Math.max(currentPrice, newPrice),
                 low: Math.min(currentPrice, newPrice),
                 close: newPrice,
-                volume: Math.floor(Math.random() * 100) + 50 // Smaller volume for per-second data
+                volume: Math.floor(Math.random() * 100) + 50 
             };
 
             candles.push(candle);
@@ -47,25 +47,25 @@ class MarketDataService {
     async storeMarketData(symbol, candles) {
         try {
             // First, clear existing data for the symbol
-            await prisma.marketData.deleteMany({
-                where: { symbol }
-            });
+            // await prisma.marketData.deleteMany({
+            //     where: { symbol }
+            // });
 
             // Store new data in batches
             const batchSize = 100;
             for (let i = 0; i < candles.length; i += batchSize) {
                 const batch = candles.slice(i, i + batchSize);
-                await prisma.marketData.createMany({
-                    data: batch.map(candle => ({
-                        symbol,
-                        time: candle.time,
-                        open: candle.open,
-                        high: candle.high,
-                        low: candle.low,
-                        close: candle.close,
-                        volume: candle.volume
-                    }))
-                });
+                // await prisma.marketData.createMany({
+                //     data: batch.map(candle => ({
+                //         symbol,
+                //         time: candle.time,
+                //         open: candle.open,
+                //         high: candle.high,
+                //         low: candle.low,
+                //         close: candle.close,
+                //         volume: candle.volume
+                //     }))
+                // });
             }
 
             // Update cache and reset index

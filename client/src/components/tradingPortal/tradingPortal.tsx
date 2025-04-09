@@ -224,7 +224,7 @@ class CustomDatafeed {
                     this._ws = null;
                 }
 
-                this._ws = new WebSocket('ws://192.168.100.4:3000/ws');
+                this._ws = new WebSocket('ws://192.168.100.3:3000/ws');
 
                 this._ws.onopen = () => {
                     console.log('WebSocket connected successfully');

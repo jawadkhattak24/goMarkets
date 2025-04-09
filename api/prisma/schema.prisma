@@ -123,5 +123,14 @@ model MarketDataUpdate {
 }
 
 
+model Pair {
+  id String @id @default(cuid())
+  symbol String
+  isControlled Boolean @default(false)
+  controlPercentage Float @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 
 
